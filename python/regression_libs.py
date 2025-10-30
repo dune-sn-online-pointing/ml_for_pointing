@@ -389,3 +389,79 @@ def my_loss_function_both_dir(y_true, y_pred):
     # the loss accepts two directions, the true and the predicted one
     return tf.reduce_sum(tf.minimum(1 - tf.reduce_sum(y_true * y_pred, axis=-1) / (tf.norm(y_true, axis=-1) * tf.norm(y_pred, axis=-1)), 1 + tf.reduce_sum(y_true * y_pred, axis=-1) / (tf.norm(y_true, axis=-1) * tf.norm(y_pred, axis=-1))), axis=-1)
 
+
+def prepare_data_from_npz_regression(data_dir, plane, dataset_parameters, output_folder):
+    """
+    Prepare data from NPZ batch files for regression (electron direction).
+    Similar to classification version but extracts direction vectors instead of binary labels.
+    
+    Args:
+        data_dir: Directory containing NPZ batch files
+        plane: Plane to use ('U', 'V', or 'X')
+        dataset_parameters: Dictionary with dataset parameters
+        output_folder: Output folder for saving samples and plots
+        
+    Returns:
+        train, validation, test: Tuples of (images, direction_labels)
+    """
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import data_loader as dl
+    import numpy as np
+    
+    train_fraction = dataset_parameters.get("train_fraction", 0.8)
+    val_fraction = dataset_parameters.get("val_fraction", 0.1)
+    test_fraction = dataset_parameters.get("test_fraction", 0.1)
+    max_samples = dataset_parameters.get("max_samples", None)
+    
+    print("\n" + "="*60)
+    print("LOADING DATA FROM NPZ FILES (REGRESSION)")
+    print("="*60)
+    print(f"Data directory: {data_dir}")
+    print(f"Plane: {plane}")
+    print(f"Max samples: {max_samples if max_samples else 'All'}")
+    
+    # Create output folder
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    
+    # Load dataset from NPZ files
+    dataset_img, metadata = dl.load_dataset_from_directory(
+        data_dir=data_dir,
+        plane=plane,
+        max_samples=max_samples,
+        verbose=True
+    )
+    
+    # Extract direction labels (columns 3-5: x, y, z)
+    dataset_label = dl.extract_direction_labels(metadata)
+    
+    print(f"Dataset shape: {dataset_img.shape}")
+    print(f"Direction labels shape: {dataset_label.shape}")
+    print(f"Direction labels range: [{dataset_label.min():.3f}, {dataset_label.max():.3f}]")
+    
+    # Add channel dimension
+    if len(dataset_img.shape) == 3:
+        dataset_img = np.expand_dims(dataset_img, axis=-1)
+    
+    # Split dataset
+    n_samples = len(dataset_img)
+    n_train = int(n_samples * train_fraction)
+    n_val = int(n_samples * val_fraction)
+    
+    # Shuffle
+    indices = np.random.permutation(n_samples)
+    train_idx = indices[:n_train]
+    val_idx = indices[n_train:n_train+n_val]
+    test_idx = indices[n_train+n_val:]
+    
+    train = (dataset_img[train_idx], dataset_label[train_idx])
+    validation = (dataset_img[val_idx], dataset_label[val_idx])
+    test = (dataset_img[test_idx], dataset_label[test_idx])
+    
+    print(f"\nData split:")
+    print(f"  Train: {len(train[0])} samples, labels shape: {train[1].shape}")
+    print(f"  Val: {len(validation[0])} samples, labels shape: {validation[1].shape}")
+    print(f"  Test: {len(test[0])} samples, labels shape: {test[1].shape}")
+    
+    return train, validation, test

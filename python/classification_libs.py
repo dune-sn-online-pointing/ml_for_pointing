@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pylab
 import seaborn as sns
-import hyperopt as hp
+# import hyperopt as hp  # Optional, only for hyperopt models
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -12,9 +12,131 @@ from mpl_toolkits.axes_grid1 import ImageGrid
 from sklearn.metrics import roc_curve, auc
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from sklearn.preprocessing import label_binarize
-import healpy as healpy
+# import healpy as healpy  # Optional
 
 import general_purpose_libs as gpl
+import data_loader as dl
+
+
+def prepare_data_from_npz(data_dir, plane, dataset_parameters, output_folder):
+    """
+    Prepare data from NPZ batch files for training.
+    
+    Args:
+        data_dir: Directory containing NPZ batch files
+        plane: Plane to use ('U', 'V', or 'X')
+        dataset_parameters: Dictionary with dataset parameters
+        output_folder: Output folder for saving samples and plots
+        
+    Returns:
+        train, validation, test: Tuples of (images, labels)
+    """
+    train_fraction = dataset_parameters.get("train_fraction", 0.8)
+    val_fraction = dataset_parameters.get("val_fraction", 0.1)
+    test_fraction = dataset_parameters.get("test_fraction", 0.1)
+    aug_coefficient = dataset_parameters.get("aug_coefficient", 1)
+    prob_per_flip = dataset_parameters.get("prob_per_flip", 0.5)
+    balance_data = dataset_parameters.get("balance_data", False)
+    balance_method = dataset_parameters.get("balance_method", "undersample")
+    max_samples = dataset_parameters.get("max_samples", None)
+    
+    print("\n" + "="*60)
+    print("LOADING DATA FROM NPZ FILES")
+    print("="*60)
+    print(f"Data directory: {data_dir}")
+    print(f"Plane: {plane}")
+    print(f"Max samples: {max_samples if max_samples else 'All'}")
+    
+    # Create output folder if it doesn't exist
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    
+    # Load dataset from NPZ files
+    dataset_img, metadata = dl.load_dataset_from_directory(
+        data_dir=data_dir,
+        plane=plane,
+        max_samples=max_samples,
+        verbose=True
+    )
+    
+    # Extract labels for main track identification
+    dataset_label = dl.extract_labels_for_mt_identification(metadata)
+    
+    # Get dataset statistics
+    stats = dl.get_dataset_statistics(metadata, verbose=True)
+    
+    # Add channel dimension if needed (for CNN compatibility)
+    if len(dataset_img.shape) == 3:
+        dataset_img = np.expand_dims(dataset_img, axis=-1)
+    
+    print(f"Dataset shape after preprocessing: {dataset_img.shape}")
+    print(f"Labels shape: {dataset_label.shape}")
+    print(f"Unique labels: {np.unique(dataset_label)}")
+    
+    # Balance dataset if requested
+    if balance_data:
+        print(f"\nBalancing dataset using {balance_method}...")
+        dataset_img, dataset_label = dl.balance_dataset(
+            dataset_img, dataset_label, 
+            method=balance_method
+        )
+    
+    # Shuffle the dataset
+    print("\nShuffling the dataset...")
+    index = np.arange(dataset_img.shape[0])
+    np.random.shuffle(index)
+    dataset_img = dataset_img[index]
+    dataset_label = dataset_label[index]
+    print("Dataset shuffled.")
+    
+    # Save some sample images
+    samples_dir = os.path.join(output_folder, "samples")
+    if not os.path.exists(samples_dir):
+        os.makedirs(samples_dir)
+    print(f"\nSaving sample images to {samples_dir}...")
+    save_samples_from_ds(dataset_img, dataset_label, samples_dir + "/")
+    print("Sample images saved.")
+    
+    # Split the dataset into training, validation and test
+    print("\nSplitting the dataset...")
+    n_total = dataset_img.shape[0]
+    n_train = int(n_total * train_fraction)
+    n_val = int(n_total * val_fraction)
+    
+    train_images = dataset_img[:n_train]
+    validation_images = dataset_img[n_train:n_train+n_val]
+    test_images = dataset_img[n_train+n_val:]
+    
+    train_labels = dataset_label[:n_train]
+    validation_labels = dataset_label[n_train:n_train+n_val]
+    test_labels = dataset_label[n_train+n_val:]
+    
+    print(f"Training set: {train_images.shape[0]} samples")
+    print(f"Validation set: {validation_images.shape[0]} samples")
+    print(f"Test set: {test_images.shape[0]} samples")
+    
+    # Data augmentation
+    if aug_coefficient > 1:
+        print(f"\nApplying data augmentation (coefficient={aug_coefficient})...")
+        print(f"Train images shape before: {train_images.shape}")
+        train_images, train_labels = data_augmentation(
+            train_images, train_labels, 
+            coefficient=aug_coefficient, 
+            prob_per_flip=prob_per_flip
+        )
+        print(f"Train images shape after: {train_images.shape}")
+        print("Data augmentation completed.")
+    
+    # Prepare return tuples
+    train = (train_images, train_labels)
+    validation = (validation_images, validation_labels)
+    test = (test_images, test_labels)
+    
+    print("="*60)
+    print("DATA PREPARATION COMPLETE")
+    print("="*60 + "\n")
+    
+    return train, validation, test
 
 
 def prepare_data(input_data, input_label, dataset_parameters, output_folder):
@@ -205,6 +327,22 @@ def log_metrics(y_true, y_pred, output_folder="", label_names=["CC", "ES"]):
     plt.title('Predictions')
     plt.savefig(output_folder+f"predictions.png")
     plt.clf()
+    
+    # Create log-scale version
+    plt.hist(bkg_preds, bins=50, alpha=0.5, label=f'{label_names[0]} (n={bkg_preds.shape[0]})')
+    plt.hist(sig_preds, bins=50, alpha=0.5, label=f'{label_names[1]} (n={sig_preds.shape[0]})')
+    plt.legend(loc='upper right')
+    plt.xlabel('Prediction')
+    plt.ylabel('Counts')
+    plt.title('Predictions (log scale)')
+    plt.yscale('log')
+    plt.savefig(output_folder+f"predictions_log.png")
+    plt.clf()
+    
+    # Save predictions and labels for later plot regeneration
+    np.save(output_folder + "predictions.npy", y_pred)
+    np.save(output_folder + "test_labels.npy", y_true)
+    print(f"Saved predictions and labels to {output_folder}")
 
 def save_sample_img(ds_item, output_folder, img_name):
     if ds_item.shape[2] == 1:
@@ -298,16 +436,14 @@ def test_model(model, test, output_folder, label_names=["CC", "ES"]):
     # Calculate metrics
     print("Calculating metrics...")
     # get the test labels from the test dataset
-    test_labels = np.array([label for _, label in test], dtype=object)
-    test_labels = np.concatenate(test_labels, axis=0)
+    test_labels = test[1]
     log_metrics(test_labels, predictions, output_folder=output_folder, label_names=label_names)
     print("Metrics calculated.")
     print("Drawing model...")
     keras.utils.plot_model(model, output_folder+"architecture.png", show_shapes=True)
     print("Model drawn.")
     print("Drawing histogram of energies...")
-    test_img = np.array([img for img, _ in test], dtype=object)
-    test_img = np.concatenate(test_img, axis=0)
+    test_img = test[0]
     
     histogram_of_enegies(test_labels, predictions, test_img, limit=0.5, output_folder=output_folder)
 
@@ -358,3 +494,125 @@ def histogram_of_enegies(test_labels, predictions, images, limit=0.5, output_fol
     plt.title('Pixel value histogram')
     plt.savefig(output_folder+"pixel_value_histogram.png")
     plt.clf()
+
+
+def prepare_data_from_multiple_npz(data_dirs, plane, dataset_parameters, output_folder):
+    """
+    Prepare data from multiple NPZ batch file directories for training.
+    
+    Args:
+        data_dirs: List of directories containing NPZ batch files
+        plane: Plane to use ('U', 'V', or 'X')
+        dataset_parameters: Dictionary with dataset parameters
+        output_folder: Output folder for saving samples and plots
+        
+    Returns:
+        train, validation, test: Tuples of (images, labels)
+        history_dict: Dictionary to store performance metrics
+    """
+    train_fraction = dataset_parameters.get("train_fraction", 0.7)
+    val_fraction = dataset_parameters.get("val_fraction", 0.15)
+    test_fraction = dataset_parameters.get("test_fraction", 0.15)
+    balance_data = dataset_parameters.get("balance_data", False)
+    balance_method = dataset_parameters.get("balance_method", "undersample")
+    max_samples = dataset_parameters.get("max_samples", None)
+    shuffle_data = dataset_parameters.get("shuffle_data", True)
+    random_seed = dataset_parameters.get("random_seed", 42)
+    
+    print("\n" + "="*60)
+    print("LOADING DATA FROM MULTIPLE NPZ DIRECTORIES")
+    print("="*60)
+    print(f"Data directories:")
+    for dir in data_dirs:
+        print(f"  - {dir}")
+    print(f"Plane: {plane}")
+    print(f"Shuffle: {shuffle_data}")
+    print(f"Max samples: {max_samples if max_samples else 'All'}")
+    
+    # Create output folder if it doesn't exist
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    
+    # Load dataset from multiple NPZ directories
+    dataset_img, metadata = dl.load_dataset_from_multiple_directories(
+        data_dirs=data_dirs,
+        plane=plane,
+        max_samples=max_samples,
+        shuffle=shuffle_data,
+        random_seed=random_seed,
+        verbose=True
+    )
+    
+    # Extract labels for main track identification
+    dataset_label = dl.extract_labels_for_mt_identification(metadata)
+    
+    # Get dataset statistics
+    stats = dl.get_dataset_statistics(metadata, verbose=True)
+    
+    # Add channel dimension if needed (for CNN compatibility)
+    if len(dataset_img.shape) == 3:
+        dataset_img = np.expand_dims(dataset_img, axis=-1)
+    
+    print(f"\nFinal dataset shape: {dataset_img.shape}")
+    print(f"Labels shape: {dataset_label.shape}")
+    
+    # Balance dataset if requested
+    if balance_data:
+        print(f"\nBalancing dataset using {balance_method} method...")
+        dataset_img, dataset_label = dl.balance_dataset(
+            dataset_img, dataset_label, 
+            method=balance_method,
+            random_state=random_seed
+        )
+    
+    # Split into train/val/test
+    print("\n" + "="*60)
+    print("SPLITTING DATASET")
+    print("="*60)
+    
+    n_samples = len(dataset_img)
+    n_train = int(n_samples * train_fraction)
+    n_val = int(n_samples * val_fraction)
+    n_test = n_samples - n_train - n_val
+    
+    print(f"Total samples: {n_samples}")
+    print(f"Train: {n_train} ({train_fraction*100:.1f}%)")
+    print(f"Validation: {n_val} ({val_fraction*100:.1f}%)")
+    print(f"Test: {n_test} ({test_fraction*100:.1f}%)")
+    
+    # Set random seed for reproducibility
+    np.random.seed(random_seed)
+    
+    # Split data
+    train_img = dataset_img[:n_train]
+    train_label = dataset_label[:n_train]
+    
+    val_img = dataset_img[n_train:n_train+n_val]
+    val_label = dataset_label[n_train:n_train+n_val]
+    
+    test_img = dataset_img[n_train+n_val:]
+    test_label = dataset_label[n_train+n_val:]
+    
+    print(f"\nTrain distribution: {np.sum(train_label==1)} main tracks, {np.sum(train_label==0)} background")
+    print(f"Val distribution: {np.sum(val_label==1)} main tracks, {np.sum(val_label==0)} background")
+    print(f"Test distribution: {np.sum(test_label==1)} main tracks, {np.sum(test_label==0)} background")
+    
+    # Save sample images
+    print("\nSaving sample images...")
+    save_sample_images(train_img, train_label, output_folder, n_samples=10)
+    
+    # Initialize history dictionary for saving performance metrics
+    history_dict = {
+        'config': {
+            'data_dirs': data_dirs,
+            'plane': plane,
+            'dataset_parameters': dataset_parameters,
+            'n_train': n_train,
+            'n_val': n_val,
+            'n_test': n_test,
+            'random_seed': random_seed
+        },
+        'dataset_stats': stats
+    }
+    
+    return (train_img, train_label), (val_img, val_label), (test_img, test_label), history_dict

@@ -48,9 +48,9 @@ def build_model(optimizable_parameters, train, validation, output_folder, input_
             verbose=1)
     ]    
 
-    history = model.fit(train, 
+    history = model.fit(train[0], train[1], 
                         epochs=200, 
-                        validation_data=validation, 
+                        validation_data=(validation[0], validation[1]), 
                         callbacks=callbacks,
                         verbose=0)
 
@@ -199,7 +199,7 @@ def hypertest_model(optimizable_parameters, train, validation, output_folder, in
                                 output_folder=output_folder, 
                                 input_shape=input_shape)
 
-    loss, accuracy=model.evaluate(validation)
+    loss, accuracy=model.evaluate(validation[0], validation[1])
     print("loss: ", loss, " accuracy: ", accuracy)
     with open(output_folder+"hyperopt_progression.txt", "a") as f:
         f.write(str(optimizable_parameters)+"\n")

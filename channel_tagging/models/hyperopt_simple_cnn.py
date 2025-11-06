@@ -14,6 +14,12 @@ import general_purpose_libs as gpl
 import regression_libs as rl
 
 def build_model(optimizable_parameters, train, validation, output_folder, input_shape):
+    # Unpack train/validation if they are tuples (streaming mode)
+    if isinstance(train, tuple):
+        train = train[0]
+    if isinstance(validation, tuple):
+        validation = validation[0]
+    
     
     model = tf.keras.Sequential()
     model.add(tf.keras.layers.Conv2D(optimizable_parameters['n_filters'], (optimizable_parameters['kernel_size'], 1), activation='relu', input_shape=input_shape))

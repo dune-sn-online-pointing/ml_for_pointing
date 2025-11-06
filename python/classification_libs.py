@@ -52,9 +52,14 @@ def prepare_data_from_npz(data_dir, plane, dataset_parameters, output_folder):
         os.makedirs(output_folder)
     
     # Load dataset from NPZ files
+    batch_pattern = dataset_parameters.get(
+        "batch_pattern", 'clusters_plane{plane}_batch*.npz'
+    )
+
     dataset_img, metadata = dl.load_dataset_from_directory(
         data_dir=data_dir,
         plane=plane,
+        batch_pattern=batch_pattern,
         max_samples=max_samples,
         verbose=True
     )
@@ -185,14 +190,13 @@ def prepare_data(input_data, input_label, dataset_parameters, output_folder):
     # Check if the dimension of images and labels are the same
     if dataset_img.shape[0] != dataset_label.shape[0]:
         print("Error: the dimension of images and labels are not the same.")
-        exit()
+    # Handle legacy metadata without explicit plane: fallback to requested plane ID
+    plane_ids = metadata[:, -1] if metadata.shape[1] > 11 else np.full(len(metadata), {'U': 0, 'V': 1, 'X': 2}[plane])
     # shuffle the dataset
     print("Shuffling the dataset...")
     index = np.arange(dataset_img.shape[0])
     np.random.shuffle(index)
     dataset_img = dataset_img[index]
-    dataset_label = dataset_label[index]
-    print("Dataset shuffled.")
 
     # Save some images
     print("Saving some images...")
@@ -445,7 +449,12 @@ def test_model(model, test, output_folder, label_names=["CC", "ES"]):
     print("Drawing histogram of energies...")
     test_img = test[0]
     
+    # Extract metadata if available (test tuple has 3 elements: img, labels, metadata)
+    test_metadata = test[2] if len(test) > 2 else None
+    
     histogram_of_enegies(test_labels, predictions, test_img, limit=0.5, output_folder=output_folder)
+    print("Drawing prediction vs energy scatter plot...")
+    plot_prediction_vs_energy(test_labels, predictions, test_img, metadata=test_metadata, output_folder=output_folder)
 
     print("Test done.")
 
@@ -481,12 +490,22 @@ def histogram_of_enegies(test_labels, predictions, images, limit=0.5, output_fol
     print("All images: ", len(all_images))
     print(np.unique(np.array(all_images), return_counts=True))
 
-    # sum the pixel values
-    plt.figure()
-    plt.hist(true_positives, range=(0, 3e6), bins=50, alpha=0.5, label='True Positives (n='+str(len(true_positives))+')')
-    plt.hist(true_negatives, range=(0, 3e6), bins=50, alpha=0.5, label='True Negatives (n='+str(len(true_negatives))+')')
-    plt.hist(false_positives, range=(0, 3e6), bins=50, alpha=0.5, label='False Positives (n='+str(len(false_positives))+')')
-    plt.hist(false_negatives, range=(0, 3e6), bins=50, alpha=0.5, label='False Negatives (n='+str(len(false_negatives))+')')
+    # sum the pixel values (ADC sums)
+    # Auto-calculate range from actual data
+    all_values = true_positives + true_negatives + false_positives + false_negatives
+    if len(all_values) > 0:
+        val_min, val_max = np.min(all_values), np.max(all_values)
+        # Add 5% margin
+        margin = 0.05 * (val_max - val_min)
+        hist_range = (max(0, val_min - margin), val_max + margin)
+    else:
+        hist_range = (0, 3e5)  # Fallback to reasonable ADC range
+    
+    plt.figure(figsize=(10, 6))
+    plt.hist(true_positives, range=hist_range, bins=100, alpha=0.5, label='True Positives (n='+str(len(true_positives))+')')
+    plt.hist(true_negatives, range=hist_range, bins=100, alpha=0.5, label='True Negatives (n='+str(len(true_negatives))+')')
+    plt.hist(false_positives, range=hist_range, bins=100, alpha=0.5, label='False Positives (n='+str(len(false_positives))+')')
+    plt.hist(false_negatives, range=hist_range, bins=100, alpha=0.5, label='False Negatives (n='+str(len(false_negatives))+')')
 
     plt.legend(loc='upper right')
     plt.xlabel('Pixel value')
@@ -494,6 +513,81 @@ def histogram_of_enegies(test_labels, predictions, images, limit=0.5, output_fol
     plt.title('Pixel value histogram')
     plt.savefig(output_folder+"pixel_value_histogram.png")
     plt.clf()
+
+def plot_prediction_vs_energy(test_labels, predictions, images, metadata=None, output_folder=""):
+    """
+    Create scatter plot of NN prediction vs cluster energy.
+    Colors separate background (blue) and main track (red) clusters.
+    
+    Args:
+        test_labels: True labels (0=background, 1=main track)
+        predictions: NN prediction outputs
+        images: Image data (used as fallback if metadata not provided)
+        metadata: Cluster metadata array where column 10 contains energy in MeV
+        output_folder: Where to save plots
+    """
+    # Get cluster energies from metadata (column 10) or compute from ADC sum
+    if metadata is not None and metadata.shape[1] > 10:
+        # Column 10 contains energy in MeV (already converted from ADC using proper factors)
+        cluster_energies = metadata[:, 10]
+        energy_unit = "MeV"
+        print(f"Using cluster energy from metadata (column 10, in MeV)")
+    else:
+        # Fallback: sum ADC values (this is less accurate as it doesn't use proper conversion factors)
+        cluster_energies = np.sum(images, axis=(1, 2))
+        energy_unit = "ADC sum"
+        print(f"Warning: Using ADC sum as energy (metadata not provided)")
+    
+    # Flatten predictions if needed
+    if len(predictions.shape) > 1:
+        predictions = predictions.flatten()
+    
+    # Separate by true label
+    bkg_mask = test_labels < 0.5
+    mt_mask = test_labels > 0.5
+    
+    bkg_energies = cluster_energies[bkg_mask]
+    bkg_preds = predictions[bkg_mask]
+    
+    mt_energies = cluster_energies[mt_mask]
+    mt_preds = predictions[mt_mask]
+    
+    print(f"Creating prediction vs energy plot...")
+    print(f"  Background clusters: {len(bkg_energies)}")
+    print(f"  Main track clusters: {len(mt_energies)}")
+    print(f"  Energy range: {cluster_energies.min():.2f} - {cluster_energies.max():.2f} {energy_unit}")
+    
+    # Linear scale plot
+    fig, ax = plt.subplots(figsize=(10, 7))
+    ax.scatter(bkg_energies, bkg_preds, alpha=0.3, s=2, c='blue', label=f'Background (n={len(bkg_energies)})')
+    ax.scatter(mt_energies, mt_preds, alpha=0.3, s=2, c='red', label=f'Main Track (n={len(mt_energies)})')
+    ax.set_xlabel(f'Cluster Energy ({energy_unit})', fontsize=14)
+    ax.set_ylabel('NN Prediction', fontsize=14)
+    ax.set_title('NN Prediction vs Cluster Energy', fontsize=16)
+    ax.legend(fontsize=12)
+    ax.grid(True, alpha=0.3)
+    ax.set_ylim(-0.05, 1.05)
+    plt.tight_layout()
+    plt.savefig(output_folder + "prediction_vs_energy.png", dpi=150)
+    plt.clf()
+    
+    # Log scale plot
+    fig2, ax2 = plt.subplots(figsize=(10, 7))
+    ax2.scatter(bkg_energies, bkg_preds, alpha=0.3, s=2, c='blue', label=f'Background (n={len(bkg_energies)})')
+    ax2.scatter(mt_energies, mt_preds, alpha=0.3, s=2, c='red', label=f'Main Track (n={len(mt_energies)})')
+    ax2.set_xlabel(f'Cluster Energy ({energy_unit})', fontsize=14)
+    ax2.set_ylabel('NN Prediction', fontsize=14)
+    ax2.set_title('NN Prediction vs Cluster Energy (log scale)', fontsize=16)
+    ax2.set_xscale('log')
+    ax2.legend(fontsize=12)
+    ax2.grid(True, alpha=0.3)
+    ax2.set_ylim(-0.05, 1.05)
+    plt.tight_layout()
+    plt.savefig(output_folder + "prediction_vs_energy_log.png", dpi=150)
+    plt.clf()
+    
+    print(f"  Saved: prediction_vs_energy.png")
+    print(f"  Saved: prediction_vs_energy_log.png")
 
 
 def prepare_data_from_multiple_npz(data_dirs, plane, dataset_parameters, output_folder):
@@ -516,6 +610,9 @@ def prepare_data_from_multiple_npz(data_dirs, plane, dataset_parameters, output_
     balance_data = dataset_parameters.get("balance_data", False)
     balance_method = dataset_parameters.get("balance_method", "undersample")
     max_samples = dataset_parameters.get("max_samples", None)
+    batch_pattern = dataset_parameters.get(
+        "batch_pattern", 'clusters_plane{plane}_batch*.npz'
+    )
     shuffle_data = dataset_parameters.get("shuffle_data", True)
     random_seed = dataset_parameters.get("random_seed", 42)
     
@@ -537,6 +634,7 @@ def prepare_data_from_multiple_npz(data_dirs, plane, dataset_parameters, output_
     dataset_img, metadata = dl.load_dataset_from_multiple_directories(
         data_dirs=data_dirs,
         plane=plane,
+        batch_pattern=batch_pattern,
         max_samples=max_samples,
         shuffle=shuffle_data,
         random_seed=random_seed,
@@ -586,12 +684,15 @@ def prepare_data_from_multiple_npz(data_dirs, plane, dataset_parameters, output_
     # Split data
     train_img = dataset_img[:n_train]
     train_label = dataset_label[:n_train]
+    train_metadata = metadata[:n_train]
     
     val_img = dataset_img[n_train:n_train+n_val]
     val_label = dataset_label[n_train:n_train+n_val]
+    val_metadata = metadata[n_train:n_train+n_val]
     
     test_img = dataset_img[n_train+n_val:]
     test_label = dataset_label[n_train+n_val:]
+    test_metadata = metadata[n_train+n_val:]
     
     print(f"\nTrain distribution: {np.sum(train_label==1)} main tracks, {np.sum(train_label==0)} background")
     print(f"Val distribution: {np.sum(val_label==1)} main tracks, {np.sum(val_label==0)} background")
@@ -615,4 +716,5 @@ def prepare_data_from_multiple_npz(data_dirs, plane, dataset_parameters, output_
         'dataset_stats': stats
     }
     
-    return (train_img, train_label), (val_img, val_label), (test_img, test_label), history_dict
+    # Return tuples with metadata included for test set
+    return (train_img, train_label), (val_img, val_label), (test_img, test_label, test_metadata), history_dict

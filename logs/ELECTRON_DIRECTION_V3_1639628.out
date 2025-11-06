@@ -1,0 +1,74 @@
+=========================================
+HTCondor GPU Electron Direction Training
+=========================================
+Job started at: Tue Nov  4 01:41:18 AM CET 2025
+Running on host: b9pgpun002.cern.ch
+Plane: json/electron_direction/production_training_v3.json
+Max samples: all
+=========================================
+Setting up LCG environment: LCG_106_cuda/x86_64-el9-gcc11-opt
+Using LCG Python: /cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/bin/python3
+Python 3.11.9
+
+
+GPU Information:
+Tue Nov  4 01:41:19 2025       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 575.51.03              Driver Version: 575.51.03      CUDA Version: 12.9     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100 NVL                Off |   00000000:3A:00.0 Off |                    0 |
+| N/A   31C    P0             62W /  400W |       4MiB /  95830MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+
+
+Python version: Python 3.11.9
+Python path: /cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/bin/python3
+Checking TensorFlow...
+2025-11-04 01:41:20.036362: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-11-04 01:41:20.077901: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX512_FP16 AVX_VNNI AMX_TILE AMX_INT8 AMX_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2025-11-04 01:41:21.729166: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+TensorFlow version: 2.16.1
+GPUs detected: 1
+  - /physical_device:GPU:0
+
+Running: ./scripts/train_electron_direction.sh --json json/electron_direction/production_training.json --plane json/electron_direction/production_training_v3.json
+=========================================
+✓ Sourced LCG environment: LCG_106_cuda/x86_64-el9-gcc11-opt
+✓ Added local packages to PYTHONPATH
+[0;34m[INFO][0m ML for Pointing Environment
+[0;34m[INFO][0m Repository: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing
+[0;34m[INFO][0m Python modules: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/python
+[0;34m[INFO][0m Data directory: /eos/home-e/evilla/dune/sn-tps/images_test
+[0;34m[INFO][0m Output directory: /eos/user/e/evilla/dune/sn-tps/neural_networks
+[0;34m[INFO][0m Python version: 3.11.9
+[0;32m[SUCCESS][0m TensorFlow 2.16.1 is available
+[INFO] ML for Pointing Environment
+[INFO] Repository: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing
+[INFO] Python modules: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/python
+[INFO] Data directory: /eos/home-e/evilla/dune/sn-tps/images_test
+[INFO] Output directory: 
+[INFO] Python version: 3.11.9
+[SUCCESS] TensorFlow 2.16.1 is available
+[INFO] Starting Electron Direction Regressor Training
+[INFO] Configuration: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/electron_direction/production_training.json
+[INFO] Running training script...
+[INFO] Command: python3 ed_training.py  --input_json /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/electron_direction/production_training.json --plane json/electron_direction/production_training_v3.json
+
+
+======================================================================
+MAIN TRACK IDENTIFIER TRAINING
+======================================================================

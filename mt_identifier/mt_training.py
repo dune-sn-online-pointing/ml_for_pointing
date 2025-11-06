@@ -263,6 +263,12 @@ def main():
         train, validation, test = all_train[0], all_validation[0], all_test[0]
 
     
+    # Ensure batch_size and epochs are in model_parameters
+    if "batch_size" not in model_parameters and "batch_size" in dataset_parameters:
+        model_parameters["batch_size"] = dataset_parameters["batch_size"]
+    if "epochs" not in model_parameters:
+        model_parameters["epochs"] = model_parameters.get("epochs", 50)
+
     # Create and train model
     print("\n" + "="*70)
     print("STEP 2: MODEL TRAINING")

@@ -1,0 +1,118 @@
+000 (17832511.000.000) 10/30 10:09:40 Job submitted from host: <188.185.72.155:9618?addrs=188.185.72.155-9618+[2001-1458-d00-8--100-95]-9618&alias=bigbird08.cern.ch&noUDP&sock=schedd_3361999_40de>
+...
+040 (17832511.000.000) 10/30 10:10:36 Started transferring input files
+	Transferring to host: <188.185.190.13:9618?addrs=188.185.190.13-9618+[2001-1458-d03-b--100-54]-9618&alias=b9pgpun048.cern.ch&noUDP&sock=slot1_1_5476_1658_293>
+...
+040 (17832511.000.000) 10/30 10:10:36 Finished transferring input files
+...
+001 (17832511.000.000) 10/30 10:10:37 Job executing on host: <188.185.190.13:9618?addrs=188.185.190.13-9618+[2001-1458-d03-b--100-54]-9618&alias=b9pgpun048.cern.ch&noUDP&sock=startd_4142_a55d>
+	SlotName: slot1_1@b9pgpun048.cern.ch
+	AvailableGPUs = { GPUs_MIG_5cd524b3_0652_5729_a502_f42bfe4bd09d }
+	CondorScratchDir = "/pool/condor/dir_224521"
+	Cpus = 14
+	Disk = 2097697
+	GPUs = 1
+	GPUs_MIG_5cd524b3_0652_5729_a502_f42bfe4bd09d = [ Id = "MIG-5cd524b3-0652-5729-a502-f42bfe4bd09d"; DeviceName = "NVIDIA H100L-2-24C MIG 2g.24gb"; DeviceUuid = "MIG-5cd524b3-0652-5729-a502-f42bfe4bd09d"; ComputeUnits = 32; GlobalMemoryMb = 21547 ]
+	Memory = 42000
+...
+006 (17832511.000.000) 10/30 10:10:51 Image size of job updated: 36468
+	36  -  MemoryUsage of job (MB)
+	36468  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 10:15:52 Image size of job updated: 21408704
+	18748  -  MemoryUsage of job (MB)
+	19197568  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 10:20:53 Image size of job updated: 37553020
+	22152  -  MemoryUsage of job (MB)
+	22683204  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 10:25:53 Image size of job updated: 37553020
+	29405  -  MemoryUsage of job (MB)
+	30110364  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 10:30:54 Image size of job updated: 37553020
+	29407  -  MemoryUsage of job (MB)
+	30112236  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 10:35:55 Image size of job updated: 37553020
+	29408  -  MemoryUsage of job (MB)
+	30113488  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 10:40:55 Image size of job updated: 37553020
+	29409  -  MemoryUsage of job (MB)
+	30114128  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 10:45:55 Image size of job updated: 37553020
+	29409  -  MemoryUsage of job (MB)
+	30114604  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 10:50:56 Image size of job updated: 37553020
+	29410  -  MemoryUsage of job (MB)
+	30115104  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 10:55:56 Image size of job updated: 37553020
+	29411  -  MemoryUsage of job (MB)
+	30115992  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 11:00:56 Image size of job updated: 37553020
+	29411  -  MemoryUsage of job (MB)
+	30116332  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 11:05:57 Image size of job updated: 37553020
+	29411  -  MemoryUsage of job (MB)
+	30116852  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 11:10:58 Image size of job updated: 37553020
+	29412  -  MemoryUsage of job (MB)
+	30117084  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 11:15:58 Image size of job updated: 37553020
+	29412  -  MemoryUsage of job (MB)
+	30117328  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 11:20:59 Image size of job updated: 37553020
+	29412  -  MemoryUsage of job (MB)
+	30117540  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 11:26:00 Image size of job updated: 37553020
+	29413  -  MemoryUsage of job (MB)
+	30118100  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 11:31:00 Image size of job updated: 37553020
+	29413  -  MemoryUsage of job (MB)
+	30118104  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 11:36:00 Image size of job updated: 37553020
+	34589  -  MemoryUsage of job (MB)
+	35418988  -  ResidentSetSize of job (KB)
+...
+006 (17832511.000.000) 10/30 11:38:59 Image size of job updated: 38470456
+	34590  -  MemoryUsage of job (MB)
+	35419340  -  ResidentSetSize of job (KB)
+...
+021 (17832511.000.000) 10/30 11:38:59 Error from starter on slot1_1@b9pgpun048.cern.ch:
+	Job has gone over cgroup memory limit of 42000 megabytes. Last measured usage: 37568 megabytes.  Consider resubmitting with a higher request_memory.
+	Code 34 Subcode 0
+...
+004 (17832511.000.000) 10/30 11:38:59 Job was evicted.
+	(0) CPU times
+		Usr 0 01:17:31, Sys 0 00:17:55  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	1768  -  Run Bytes Received By Job
+	Error from slot1_1@b9pgpun048.cern.ch: Job has gone over cgroup memory limit of 42000 megabytes. Last measured usage: 37568 megabytes.  Consider resubmitting with a higher request_memory.
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     1.41       14        14 
+	   Disk (KB)            :   240     2097152   2097697 
+	   GPUs                 :                 1         1 "MIG-5cd524b3-0652-5729-a502-f42bfe4bd09d"
+	   Memory (MB)          : 34590       42000     42000 
+	   TimeSlotBusy (s)     :  5304                       
+...
+012 (17832511.000.000) 10/30 11:38:59 Job was held.
+	Error from slot1_1@b9pgpun048.cern.ch: Job has gone over cgroup memory limit of 42000 megabytes. Last measured usage: 37568 megabytes.  Consider resubmitting with a higher request_memory.
+	Code 34 Subcode 0
+...
+009 (17832511.000.000) 10/30 12:03:30 Job was aborted.
+	via condor_rm (by user evilla)
+...

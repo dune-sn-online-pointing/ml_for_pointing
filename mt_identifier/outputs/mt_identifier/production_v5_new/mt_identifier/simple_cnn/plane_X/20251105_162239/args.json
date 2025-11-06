@@ -1,0 +1,8 @@
+{
+  "input_json": "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/mt_identifier/production_training_new.json",
+  "output_folder": null,
+  "data_dir": "/eos/home-e/evilla/dune/sn-tps/images_test",
+  "plane": "X",
+  "max_samples": null,
+  "verbose": "False"
+}

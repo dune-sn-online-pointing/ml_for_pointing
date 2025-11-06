@@ -1,0 +1,66 @@
+000 (17836093.000.000) 10/30 12:03:36 Job submitted from host: <188.185.72.155:9618?addrs=188.185.72.155-9618+[2001-1458-d00-8--100-95]-9618&alias=bigbird08.cern.ch&noUDP&sock=schedd_3361999_40de>
+...
+040 (17836093.000.000) 10/30 12:10:46 Started transferring input files
+	Transferring to host: <188.185.190.62:9618?addrs=188.185.190.62-9618+[2001-1458-d03-b--100-122]-9618&alias=b9pgpun0356.cern.ch&noUDP&sock=slot1_1_5421_55b6_5706>
+...
+040 (17836093.000.000) 10/30 12:10:46 Finished transferring input files
+...
+001 (17836093.000.000) 10/30 12:10:47 Job executing on host: <188.185.190.62:9618?addrs=188.185.190.62-9618+[2001-1458-d03-b--100-122]-9618&alias=b9pgpun0356.cern.ch&noUDP&sock=startd_5376_113b>
+	SlotName: slot1_1@b9pgpun0356.cern.ch
+	AvailableGPUs = { GPUs_MIG_bda668e4_1416_5e4a_9ea9_f1e219b17c5a }
+	CondorScratchDir = "/pool/condor/dir_2863133"
+	Cpus = 14
+	Disk = 2098000
+	GPUs = 1
+	GPUs_MIG_bda668e4_1416_5e4a_9ea9_f1e219b17c5a = [ Id = "MIG-bda668e4-1416-5e4a-9ea9-f1e219b17c5a"; DeviceName = "NVIDIA H100L-2-24C MIG 2g.24gb"; DeviceUuid = "MIG-bda668e4-1416-5e4a-9ea9-f1e219b17c5a"; ComputeUnits = 32; GlobalMemoryMb = 21547 ]
+	Memory = 42000
+...
+006 (17836093.000.000) 10/30 12:11:01 Image size of job updated: 109292
+	107  -  MemoryUsage of job (MB)
+	109292  -  ResidentSetSize of job (KB)
+...
+006 (17836093.000.000) 10/30 12:16:02 Image size of job updated: 18560100
+	18126  -  MemoryUsage of job (MB)
+	18560100  -  ResidentSetSize of job (KB)
+...
+006 (17836093.000.000) 10/30 12:21:02 Image size of job updated: 36953504
+	35509  -  MemoryUsage of job (MB)
+	36360416  -  ResidentSetSize of job (KB)
+...
+006 (17836093.000.000) 10/30 12:26:03 Image size of job updated: 37201492
+	35510  -  MemoryUsage of job (MB)
+	36361280  -  ResidentSetSize of job (KB)
+...
+006 (17836093.000.000) 10/30 13:21:09 Image size of job updated: 37201492
+	36195  -  MemoryUsage of job (MB)
+	37063124  -  ResidentSetSize of job (KB)
+...
+006 (17836093.000.000) 10/30 13:22:38 Image size of job updated: 38214812
+	36195  -  MemoryUsage of job (MB)
+	37063456  -  ResidentSetSize of job (KB)
+...
+021 (17836093.000.000) 10/30 13:22:38 Error from starter on slot1_1@b9pgpun0356.cern.ch:
+	Job has gone over cgroup memory limit of 42000 megabytes. Last measured usage: 37319 megabytes.  Consider resubmitting with a higher request_memory.
+	Code 34 Subcode 0
+...
+004 (17836093.000.000) 10/30 13:22:38 Job was evicted.
+	(0) CPU times
+		Usr 0 01:00:38, Sys 0 00:23:51  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	1768  -  Run Bytes Received By Job
+	Error from slot1_1@b9pgpun0356.cern.ch: Job has gone over cgroup memory limit of 42000 megabytes. Last measured usage: 37319 megabytes.  Consider resubmitting with a higher request_memory.
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     1.36       14        14 
+	   Disk (KB)            :   213     2097152   2098000 
+	   GPUs                 :                 1         1 "MIG-bda668e4-1416-5e4a-9ea9-f1e219b17c5a"
+	   Memory (MB)          : 36195       42000     42000 
+	   TimeSlotBusy (s)     :  4313                       
+...
+012 (17836093.000.000) 10/30 13:22:38 Job was held.
+	Error from slot1_1@b9pgpun0356.cern.ch: Job has gone over cgroup memory limit of 42000 megabytes. Last measured usage: 37319 megabytes.  Consider resubmitting with a higher request_memory.
+	Code 34 Subcode 0
+...
+009 (17836093.000.000) 10/30 13:42:38 Job was aborted.
+	via condor_rm (by user evilla)
+...

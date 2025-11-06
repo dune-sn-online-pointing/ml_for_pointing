@@ -1,0 +1,100 @@
+=========================================
+HTCondor GPU Training Job
+=========================================
+Job started at: Tue Nov  4 11:03:47 AM CET 2025
+Running on host: b9pgpun003.cern.ch
+Plane: X
+Max samples: all
+JSON config: json/mt_identifier/production_training_prod_main_v4.json
+=========================================
+Setting up LCG environment: LCG_106_cuda/x86_64-el9-gcc11-opt
+Using LCG Python: /cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/bin/python3
+Python 3.11.9
+
+
+GPU Information:
+Tue Nov  4 11:03:48 2025       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 575.51.03              Driver Version: 575.51.03      CUDA Version: 12.9     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100 NVL                Off |   00000000:3A:00.0 Off |                    0 |
+| N/A   32C    P0             61W /  400W |      78MiB /  95830MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+
+
+Python version: Python 3.11.9
+Python path: /cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/bin/python3
+Checking TensorFlow...
+2025-11-04 11:03:49.678593: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-11-04 11:03:49.935033: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX512_FP16 AVX_VNNI AMX_TILE AMX_INT8 AMX_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2025-11-04 11:03:51.952545: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+TensorFlow version: 2.16.1
+GPUs detected: 1
+  - /physical_device:GPU:0
+
+Running: ./scripts/train_mt_identifier.sh -j json/mt_identifier/production_training_prod_main_v4.json --plane X
+=========================================
+✓ Sourced LCG environment: LCG_106_cuda/x86_64-el9-gcc11-opt
+✓ Added local packages to PYTHONPATH
+[0;34m[INFO][0m ML for Pointing Environment
+[0;34m[INFO][0m Repository: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing
+[0;34m[INFO][0m Python modules: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/python
+[0;34m[INFO][0m Data directory: /eos/home-e/evilla/dune/sn-tps/images_test
+[0;34m[INFO][0m Output directory: /eos/user/e/evilla/dune/sn-tps/neural_networks
+[0;34m[INFO][0m Python version: 3.11.9
+[0;32m[SUCCESS][0m TensorFlow 2.16.1 is available
+[0;34m[INFO][0m Starting Main Track Identifier Training
+[0;34m[INFO][0m Configuration: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/mt_identifier/production_training_prod_main_v4.json
+[0;34m[INFO][0m Plane: X
+[0;34m[INFO][0m Running training script...
+[0;34m[INFO][0m Command: python3 mt_training.py --input_json /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/mt_identifier/production_training_prod_main_v4.json --plane X
+
+
+======================================================================
+MAIN TRACK IDENTIFIER TRAINING
+======================================================================
+
+✓ GPU is available: 1 device(s)
+  GPU 0: /physical_device:GPU:0
+
+Loading configuration from: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/mt_identifier/production_training_prod_main_v4.json
+Configuration loaded successfully
+
+Output directory: /eos/user/e/evilla/dune/sn-tps/neural_networks/mt_identifier/hyperopt_simple_cnn/plane_X/20251104_110410
+Configuration saved to: /eos/user/e/evilla/dune/sn-tps/neural_networks/mt_identifier/hyperopt_simple_cnn/plane_X/20251104_110410/config.json
+Arguments saved to: /eos/user/e/evilla/dune/sn-tps/neural_networks/mt_identifier/hyperopt_simple_cnn/plane_X/20251104_110410/args.json
+Selected model: hyperopt_simple_cnn
+Using 2 data directories from JSON config:
+  - /eos/user/e/evilla/dune/sn-tps/production_es/images_es_prod_main_tick3_ch2_min2_tot3_e2p0
+  - /eos/user/e/evilla/dune/sn-tps/production_cc/images_cc_prod_main_tick3_ch2_min2_tot3_e2p0
+
+======================================================================
+STEP 1: DATA PREPARATION
+======================================================================
+
+Loading from directory 1/2: /eos/user/e/evilla/dune/sn-tps/production_es/images_es_prod_main_tick3_ch2_min2_tot3_e2p0
+
+============================================================
+LOADING DATA FROM NPZ FILES
+============================================================
+Data directory: /eos/user/e/evilla/dune/sn-tps/production_es/images_es_prod_main_tick3_ch2_min2_tot3_e2p0
+Plane: X
+Max samples: All
+Found 4454 batch file(s) for plane X (pattern: *_planeX.npz)
+Loading prodmarley_nue_flat_es_dune10kt_1x2x2_20250826T082329Z_gen_000001_supernova_g4_detsim_ana_2025-10-21T_090355Z_bg_matched_planeX.npz... 
+
+✗ Error during training: name 'os' is not defined

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MT Identifier v5 - Training Results</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #4ec9b0;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #9cdcfe;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .plot-section {
+            background-color: #252526;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        .plot-section h2 {
+            color: #4ec9b0;
+            margin-top: 0;
+            border-bottom: 2px solid #4ec9b0;
+            padding-bottom: 10px;
+        }
+        .plot-section img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            background-color: white;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .metric-card {
+            background-color: #2d2d30;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border-left: 4px solid #4ec9b0;
+        }
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4ec9b0;
+        }
+        .metric-label {
+            color: #9cdcfe;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .info {
+            background-color: #2d2d30;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ce9178;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MT Identifier v5 - Training Results</h1>
+        <div class="subtitle">Main Track Classification Model - November 5, 2025</div>
+        
+        <div class="info">
+            <strong>Model:</strong> simple_cnn | 
+            <strong>Dataset:</strong> NEW data paths | 
+            <strong>Training Time:</strong> ~43 minutes (10 epochs with early stopping) | 
+            <strong>Output:</strong> /eos/user/e/evilla/dune/sn-tps/neural_networks/mt_identifier/simple_cnn/plane_X/20251105_192215/
+        </div>
+
+        <div class="metrics">
+            <div class="metric-card">
+                <div class="metric-value">92.03%</div>
+                <div class="metric-label">Accuracy</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">92.18%</div>
+                <div class="metric-label">Precision</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">92.03%</div>
+                <div class="metric-label">Recall</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">92.02%</div>
+                <div class="metric-label">F1-Score</div>
+            </div>
+        </div>
+
+        <div class="plot-section">
+            <h2>📈 Training History</h2>
+            <p>Loss and accuracy curves showing model convergence over 10 epochs. Early stopping prevented overfitting when validation loss stopped improving.</p>
+            <img src="training_history.png" alt="Training History">
+        </div>
+
+        <div class="plot-section">
+            <h2>🎯 Confusion Matrix</h2>
+            <p>Classification performance breakdown: 89% background recall, 95% main track recall. The model is slightly better at identifying main tracks than filtering out background.</p>
+            <img src="confusion_matrix.png" alt="Confusion Matrix">
+        </div>
+
+        <div class="plot-section">
+            <h2>📊 Test Metrics Summary</h2>
+            <p>Overall performance on the test set showing consistent ~92% performance across all metrics.</p>
+            <img src="test_metrics.png" alt="Test Metrics">
+        </div>
+    </div>
+</body>
+</html>

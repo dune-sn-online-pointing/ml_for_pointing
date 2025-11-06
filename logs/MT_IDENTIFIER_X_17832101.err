@@ -1,0 +1,26 @@
+2025-10-30 00:25:54.047711: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-10-30 00:25:54.090354: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX512_FP16 AVX_VNNI AMX_TILE AMX_INT8 AMX_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2025-10-30 00:25:56.075447: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+2025-10-30 00:26:15.668490: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:998] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2025-10-30 00:26:15.712157: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:998] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2025-10-30 00:26:15.722911: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:998] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+Traceback (most recent call last):
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/mt_identifier/mt_training.py", line 345, in <module>
+    main()
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/mt_identifier/mt_training.py", line 233, in main
+    train, validation, test = cl.prepare_data_from_npz(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/python/classification_libs.py", line 55, in prepare_data_from_npz
+    dataset_img, metadata = dl.load_dataset_from_directory(
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/python/data_loader.py", line 107, in load_dataset_from_directory
+    images, metadata = load_npz_batch(str(batch_file))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/python/data_loader.py", line 58, in load_npz_batch
+    data = np.load(file_path)
+           ^^^^^^^^^^^^^^^^^^
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/numpy/lib/npyio.py", line 434, in load
+    magic = fid.read(N)
+            ^^^^^^^^^^^
+OSError: [Errno 5] Input/output error

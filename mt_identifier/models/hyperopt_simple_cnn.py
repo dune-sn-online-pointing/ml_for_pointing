@@ -44,12 +44,12 @@ def build_model(optimizable_parameters, train, validation, output_folder, input_
     callbacks = [
         keras.callbacks.EarlyStopping(
             monitor='val_loss',
-            patience=4,
+            patience=7,
             verbose=1)
     ]    
 
     history = model.fit(train[0], train[1], 
-                        epochs=200, 
+                        epochs=30, 
                         validation_data=(validation[0], validation[1]), 
                         callbacks=callbacks,
                         verbose=0)

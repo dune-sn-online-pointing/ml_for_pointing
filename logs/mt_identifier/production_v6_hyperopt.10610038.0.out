@@ -1,0 +1,48 @@
+=========================================
+HTCondor GPU Training Job
+=========================================
+Job started at: Thu Nov  6 03:00:32 PM CET 2025
+Running on host: b9p04p6505.cern.ch
+Plane: mt_identifier
+Max samples: all
+JSON config: json/mt_identifier/production_v6_hyperopt.json
+=========================================
+Setting up LCG environment: LCG_106_cuda/x86_64-el9-gcc11-opt
+Using LCG Python: /cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/bin/python3
+Python 3.11.9
+
+
+GPU Information:
+nvidia-smi not available
+
+
+Python version: Python 3.11.9
+Python path: /cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/bin/python3
+Checking TensorFlow...
+2025-11-06 15:00:44.464338: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2025-11-06 15:00:54.625465: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+TensorFlow version: 2.16.1
+GPUs detected: 0
+
+Running: ./scripts/train_mt_identifier.sh -j json/mt_identifier/production_v6_hyperopt.json --plane mt_identifier
+=========================================
+✓ Sourced LCG environment: LCG_106_cuda/x86_64-el9-gcc11-opt
+✓ Added local packages to PYTHONPATH
+[0;34m[INFO][0m ML for Pointing Environment
+[0;34m[INFO][0m Repository: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing
+[0;34m[INFO][0m Python modules: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/python
+[0;34m[INFO][0m Data directory: /eos/home-e/evilla/dune/sn-tps/images_test
+[0;34m[INFO][0m Output directory: /eos/user/e/evilla/dune/sn-tps/neural_networks
+[0;34m[INFO][0m Python version: 3.11.9
+[0;32m[SUCCESS][0m TensorFlow 2.16.1 is available
+[0;34m[INFO][0m Starting Main Track Identifier Training
+[0;34m[INFO][0m Configuration: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/mt_identifier/production_v6_hyperopt.json
+[0;34m[INFO][0m Plane: mt_identifier
+[0;34m[INFO][0m Running training script...
+[0;34m[INFO][0m Command: python3 mt_training.py --input_json /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/mt_identifier/production_v6_hyperopt.json --plane mt_identifier
+
+
+======================================================================
+MAIN TRACK IDENTIFIER TRAINING
+======================================================================

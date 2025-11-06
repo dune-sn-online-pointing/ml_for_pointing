@@ -1,0 +1,40 @@
+=========================================
+HTCondor Channel Tagging Training
+=========================================
+Job started: Thu Nov  6 04:54:25 PM CET 2025
+Host: b9g34p2113.cern.ch
+Plane: X
+Max samples: ''
+Config: json/channel_tagging/production_v8_streaming.json
+=========================================
+LCG environment: LCG_106_cuda/x86_64-el9-gcc11-opt
+Python: /cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/bin/python3 (Python 3.11.9)
+No GPU
+Running: ./scripts/train_channel_tagging.sh -j json/channel_tagging/production_v8_streaming.json --plane X
+=========================================
+✓ Sourced LCG environment: LCG_106_cuda/x86_64-el9-gcc11-opt
+✓ Added local packages to PYTHONPATH
+[0;34m[INFO][0m ML for Pointing Environment
+[0;34m[INFO][0m Repository: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing
+[0;34m[INFO][0m Python modules: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/python
+[0;34m[INFO][0m Data directory: /eos/home-e/evilla/dune/sn-tps/images_test
+[0;34m[INFO][0m Output directory: /eos/user/e/evilla/dune/sn-tps/neural_networks
+[0;34m[INFO][0m Python version: 3.11.9
+[0;32m[SUCCESS][0m TensorFlow 2.16.1 is available
+Running: python3 channel_tagging/ct_training.py --input_json json/channel_tagging/production_v8_streaming.json --plane X
+
+======================================================================
+CHANNEL TAGGING TRAINING
+======================================================================
+
+⚠ GPU is NOT available - training will use CPU
+
+Loading configuration from: json/channel_tagging/production_v8_streaming.json
+Configuration loaded successfully
+
+Output directory: /eos/user/e/evilla/dune/sn-tps/neural_networks/mt_identifier/hyperopt_simple_cnn/plane_X/20251106_165529
+Configuration saved to: /eos/user/e/evilla/dune/sn-tps/neural_networks/mt_identifier/hyperopt_simple_cnn/plane_X/20251106_165529/config.json
+Arguments saved to: /eos/user/e/evilla/dune/sn-tps/neural_networks/mt_identifier/hyperopt_simple_cnn/plane_X/20251106_165529/args.json
+
+
+✗ Error during training: invalid syntax (hyperopt_simple_cnn.py, line 29)

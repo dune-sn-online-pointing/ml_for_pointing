@@ -1,0 +1,76 @@
+2025-11-02 18:41:02.237808: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2025-11-02 18:41:07.300025: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+2025-11-02 18:41:26.142745: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:998] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2025-11-02 18:41:26.213702: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:998] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2025-11-02 18:41:26.215723: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:998] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/keras/src/layers/convolutional/base_conv.py:107: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
+  super().__init__(activity_regularizer=activity_regularizer, **kwargs)
+
+2025-11-02 18:42:03.651684: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:998] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2025-11-02 18:42:03.654212: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:998] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2025-11-02 18:42:03.656064: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:998] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2025-11-02 18:42:03.895804: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:998] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2025-11-02 18:42:03.897353: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:998] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2025-11-02 18:42:03.898695: I external/local_xla/xla/stream_executor/cuda/cuda_executor.cc:998] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+2025-11-02 18:42:03.900262: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1928] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 13725 MB memory:  -> device: 0, name: Tesla T4, pci bus id: 0000:08:00.0, compute capability: 7.5
+/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/keras/src/layers/activations/leaky_relu.py:41: UserWarning: Argument `alpha` is deprecated. Use `negative_slope` instead.
+  warnings.warn(
+
+job exception: Exception encountered when calling Sequential.call().
+
+[1mInput 0 of layer "dense" is incompatible with the layer: expected axis -1 of input shape to have value 40320, but received input with shape (None, 1176)[0m
+
+Arguments received by Sequential.call():
+  • inputs=('tf.Tensor(shape=(None, 128, 16, 1), dtype=float32)', 'tf.Tensor(shape=(None,), dtype=float32)')
+  • training=True
+  • mask=('None', 'None')
+
+Traceback (most recent call last):
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/channel_tagging/ct_training.py", line 302, in <module>
+    main()
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/channel_tagging/ct_training.py", line 228, in main
+    model, history = selected_model.create_and_train_model(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/channel_tagging/models/hyperopt_simple_cnn.py", line 77, in create_and_train_model
+    best = hp.fmin(
+           ^^^^^^^^
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/hyperopt/fmin.py", line 540, in fmin
+    return trials.fmin(
+           ^^^^^^^^^^^^
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/hyperopt/base.py", line 671, in fmin
+    return fmin(
+           ^^^^^
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/hyperopt/fmin.py", line 586, in fmin
+    rval.exhaust()
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/hyperopt/fmin.py", line 364, in exhaust
+    self.run(self.max_evals - n_done, block_until_done=self.asynchronous)
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/hyperopt/fmin.py", line 300, in run
+    self.serial_evaluate()
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/hyperopt/fmin.py", line 178, in serial_evaluate
+    result = self.domain.evaluate(spec, ctrl)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/hyperopt/base.py", line 892, in evaluate
+    rval = self.fn(pyll_rval)
+           ^^^^^^^^^^^^^^^^^^
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/channel_tagging/models/hyperopt_simple_cnn.py", line 78, in <lambda>
+    fn=lambda x: hypertest_model(  optimizable_parameters=x,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/channel_tagging/models/hyperopt_simple_cnn.py", line 196, in hypertest_model
+    model, history = build_model(optimizable_parameters=optimizable_parameters,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/channel_tagging/models/hyperopt_simple_cnn.py", line 51, in build_model
+    history = model.fit(train,
+             ^^^^^^^^^^^^^^^^
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/keras/src/utils/traceback_utils.py", line 122, in error_handler
+    raise e.with_traceback(filtered_tb) from None
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/keras/src/layers/input_spec.py", line 227, in assert_input_compatibility
+    raise ValueError(
+ValueError: Exception encountered when calling Sequential.call().
+
+[1mInput 0 of layer "dense" is incompatible with the layer: expected axis -1 of input shape to have value 40320, but received input with shape (None, 1176)[0m
+
+Arguments received by Sequential.call():
+  • inputs=('tf.Tensor(shape=(None, 128, 16, 1), dtype=float32)', 'tf.Tensor(shape=(None,), dtype=float32)')
+  • training=True
+  • mask=('None', 'None')

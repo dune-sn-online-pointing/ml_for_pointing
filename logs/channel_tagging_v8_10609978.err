@@ -1,0 +1,54 @@
+/pool/condor/dir_451716/condor_wrapper_channel_tagging.sh: line 30: nvidia-smi: command not found
+2025-11-06 13:33:56.822247: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-11-06 13:33:56.941645: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2025-11-06 13:34:01.365336: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/keras/src/layers/convolutional/base_conv.py:107: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
+  super().__init__(activity_regularizer=activity_regularizer, **kwargs)
+
+/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/keras/src/layers/activations/leaky_relu.py:41: UserWarning: Argument `alpha` is deprecated. Use `negative_slope` instead.
+  warnings.warn(
+
+job exception: Unrecognized data type: x=(<_PrefetchDataset element_spec=(TensorSpec(shape=(None, 208, 1242, 1), dtype=tf.float32, name=None), TensorSpec(shape=(None,), dtype=tf.float32, name=None))>, None) (of type <class 'tuple'>)
+
+Traceback (most recent call last):
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/channel_tagging/ct_training.py", line 336, in <module>
+    main()
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/channel_tagging/ct_training.py", line 262, in main
+    model, history = selected_model.create_and_train_model(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/channel_tagging/models/hyperopt_simple_cnn.py", line 77, in create_and_train_model
+    best = hp.fmin(
+           ^^^^^^^^
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/hyperopt/fmin.py", line 540, in fmin
+    return trials.fmin(
+           ^^^^^^^^^^^^
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/hyperopt/base.py", line 671, in fmin
+    return fmin(
+           ^^^^^
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/hyperopt/fmin.py", line 586, in fmin
+    rval.exhaust()
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/hyperopt/fmin.py", line 364, in exhaust
+    self.run(self.max_evals - n_done, block_until_done=self.asynchronous)
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/hyperopt/fmin.py", line 300, in run
+    self.serial_evaluate()
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/hyperopt/fmin.py", line 178, in serial_evaluate
+    result = self.domain.evaluate(spec, ctrl)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/hyperopt/base.py", line 892, in evaluate
+    rval = self.fn(pyll_rval)
+           ^^^^^^^^^^^^^^^^^^
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/channel_tagging/models/hyperopt_simple_cnn.py", line 78, in <lambda>
+    fn=lambda x: hypertest_model(  optimizable_parameters=x,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/channel_tagging/models/hyperopt_simple_cnn.py", line 196, in hypertest_model
+    model, history = build_model(optimizable_parameters=optimizable_parameters,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/channel_tagging/models/hyperopt_simple_cnn.py", line 51, in build_model
+    history = model.fit(train,
+             ^^^^^^^^^^^^^^^^
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/keras/src/utils/traceback_utils.py", line 122, in error_handler
+    raise e.with_traceback(filtered_tb) from None
+  File "/cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/lib/python3.11/site-packages/keras/src/trainers/data_adapters/__init__.py", line 120, in get_data_adapter
+    raise ValueError(f"Unrecognized data type: x={x} (of type {type(x)})")
+ValueError: Unrecognized data type: x=(<_PrefetchDataset element_spec=(TensorSpec(shape=(None, 208, 1242, 1), dtype=tf.float32, name=None), TensorSpec(shape=(None,), dtype=tf.float32, name=None))>, None) (of type <class 'tuple'>)

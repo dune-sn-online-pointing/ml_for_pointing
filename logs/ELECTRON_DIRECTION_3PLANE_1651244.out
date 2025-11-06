@@ -1,0 +1,83 @@
+======================================================================
+HTCondor Job: Electron Direction (Three Planes) Training
+======================================================================
+Job started at: Tue Nov  4 05:14:26 PM CET 2025
+Running on host: b9g57n5454.cern.ch
+Working directory: /pool/condor/dir_3845197
+======================================================================
+Setting up LCG_106_cuda environment...
+
+Environment setup complete
+Python version: Python 3.11.9
+Python location: /cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/bin/python
+
+Checking GPU availability...
+Tue Nov  4 17:14:30 2025       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 575.57.08              Driver Version: 575.57.08      CUDA Version: 12.9     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-PCIE-40GB          Off |   00000000:06:00.0 Off |                    0 |
+| N/A   42C    P0             44W /  250W |      72MiB /  40960MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+
+TensorFlow GPU check:
+TensorFlow version: 2.16.1
+GPUs available: 1
+
+======================================================================
+Starting training script...
+======================================================================
+Executing: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/scripts/train_electron_direction_3plane.sh --condor --json /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/electron_direction_3plane/production_training.json
+======================================================================
+ELECTRON DIRECTION TRAINING (THREE PLANES)
+======================================================================
+Project directory: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing
+JSON config: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/electron_direction_3plane/production_training.json
+Run mode: condor
+======================================================================
+✓ Sourced LCG environment: LCG_106_cuda/x86_64-el9-gcc11-opt
+✓ Added local packages to PYTHONPATH
+[0;34m[INFO][0m ML for Pointing Environment
+[0;34m[INFO][0m Repository: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing
+[0;34m[INFO][0m Python modules: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/python
+[0;34m[INFO][0m Data directory: /eos/home-e/evilla/dune/sn-tps/images_test
+[0;34m[INFO][0m Output directory: /eos/user/e/evilla/dune/sn-tps/neural_networks
+[0;34m[INFO][0m Python version: 3.11.9
+[0;32m[SUCCESS][0m TensorFlow 2.16.1 is available
+
+Starting training...
+Command: python3 electron_direction_3plane/ed3p_training.py --input_json /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/electron_direction_3plane/production_training.json
+
+
+======================================================================
+ELECTRON DIRECTION TRAINING (THREE PLANES)
+======================================================================
+
+✓ GPU is available: 1 device(s)
+  GPU 0: /physical_device:GPU:0
+
+Loading configuration from: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/electron_direction_3plane/production_training.json
+Configuration loaded successfully
+
+Output directory: /eos/user/e/evilla/dune/sn-tps/neural_networks/electron_direction_3plane/d3_views_hp_simple_cnn/20251104_171608
+
+
+✗ Error during training: [Errno 122] Disk quota exceeded: '/eos/user/e/evilla/dune/sn-tps/neural_networks/electron_direction_3plane/d3_views_hp_simple_cnn/20251104_171608/config.json'
+
+======================================================================
+Job finished at: Tue Nov  4 05:16:10 PM CET 2025
+Exit code: 1
+======================================================================

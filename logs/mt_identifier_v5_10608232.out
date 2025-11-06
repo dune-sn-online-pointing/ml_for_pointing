@@ -1,0 +1,60 @@
+=========================================
+HTCondor GPU Training Job
+=========================================
+Job started at: Wed Nov  5 05:24:25 PM CET 2025
+Running on host: b9p05p8888.cern.ch
+Plane: X
+Max samples: all
+JSON config: json/mt_identifier/production_v5.json
+=========================================
+Setting up LCG environment: LCG_106_cuda/x86_64-el9-gcc11-opt
+Using LCG Python: /cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/bin/python3
+Python 3.11.9
+
+
+GPU Information:
+nvidia-smi not available
+
+
+Python version: Python 3.11.9
+Python path: /cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/bin/python3
+Checking TensorFlow...
+2025-11-05 17:24:34.095952: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2025-11-05 17:24:41.701787: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+TensorFlow version: 2.16.1
+GPUs detected: 0
+
+Running: ./scripts/train_mt_identifier.sh -j json/mt_identifier/production_v5.json --plane X
+=========================================
+✓ Sourced LCG environment: LCG_106_cuda/x86_64-el9-gcc11-opt
+✓ Added local packages to PYTHONPATH
+[0;34m[INFO][0m ML for Pointing Environment
+[0;34m[INFO][0m Repository: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing
+[0;34m[INFO][0m Python modules: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/python
+[0;34m[INFO][0m Data directory: /eos/home-e/evilla/dune/sn-tps/images_test
+[0;34m[INFO][0m Output directory: /eos/user/e/evilla/dune/sn-tps/neural_networks
+[0;34m[INFO][0m Python version: 3.11.9
+[0;32m[SUCCESS][0m TensorFlow 2.16.1 is available
+[0;34m[INFO][0m Starting Main Track Identifier Training
+[0;34m[INFO][0m Configuration: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/mt_identifier/production_v5.json
+[0;34m[INFO][0m Plane: X
+[0;34m[INFO][0m Running training script...
+[0;34m[INFO][0m Command: python3 mt_training.py --input_json /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/mt_identifier/production_v5.json --plane X
+
+
+======================================================================
+MAIN TRACK IDENTIFIER TRAINING
+======================================================================
+
+⚠ GPU is NOT available - training will use CPU
+
+Loading configuration from: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/mt_identifier/production_v5.json
+Configuration loaded successfully
+
+Output directory: outputs/mt_identifier/production_v5/mt_identifier/simple_cnn/plane_X/20251105_172524
+Configuration saved to: outputs/mt_identifier/production_v5/mt_identifier/simple_cnn/plane_X/20251105_172524/config.json
+Arguments saved to: outputs/mt_identifier/production_v5/mt_identifier/simple_cnn/plane_X/20251105_172524/args.json
+
+
+✗ Error during training: name 'epochs' is not defined

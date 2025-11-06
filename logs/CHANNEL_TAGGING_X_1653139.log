@@ -1,0 +1,59 @@
+000 (1653139.000.000) 11/04 23:46:01 Job submitted from host: <188.185.129.8:9618?addrs=188.185.129.8-9618+[2001-1458-d03-1--100-8a]-9618&alias=bigbird101.cern.ch&noUDP&sock=schedd_3613352_8137>
+...
+040 (1653139.000.000) 11/04 23:46:44 Started transferring input files
+	Transferring to host: <188.185.92.203:9618?addrs=188.185.92.203-9618+[2001-1458-d00-6c--100-2c0]-9618&alias=b9g57n2077.cern.ch&noUDP&sock=slot1_1_6855_b7b0_29688>
+...
+040 (1653139.000.000) 11/04 23:46:44 Finished transferring input files
+...
+001 (1653139.000.000) 11/04 23:46:45 Job executing on host: <188.185.92.203:9618?addrs=188.185.92.203-9618+[2001-1458-d00-6c--100-2c0]-9618&alias=b9g57n2077.cern.ch&noUDP&sock=startd_6108_288f>
+	SlotName: slot1_1@b9g57n2077.cern.ch
+	AvailableGPUs = { GPUs_GPU_f7b29eb4 }
+	CondorScratchDir = "/pool/condor/dir_3580003"
+	Cpus = 6
+	Disk = 4195332
+	GPUs = 1
+	GPUs_GPU_f7b29eb4 = [ Id = "GPU-f7b29eb4"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100-PCIE-40GB"; DeviceUuid = "f7b29eb4-a8a4-2aa2-9117-94b506dacb04"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.9; DevicePciBusId = "0000:06:00.0"; GlobalMemoryMb = 40441; MaxSupportedVersion = 12090 ]
+	Memory = 18000
+...
+006 (1653139.000.000) 11/04 23:46:58 Image size of job updated: 37296
+	37  -  MemoryUsage of job (MB)
+	37296  -  ResidentSetSize of job (KB)
+...
+006 (1653139.000.000) 11/04 23:51:58 Image size of job updated: 35704952
+	34869  -  MemoryUsage of job (MB)
+	35704952  -  ResidentSetSize of job (KB)
+...
+006 (1653139.000.000) 11/04 23:56:59 Image size of job updated: 36386524
+	35279  -  MemoryUsage of job (MB)
+	36125336  -  ResidentSetSize of job (KB)
+...
+006 (1653139.000.000) 11/05 00:02:00 Image size of job updated: 36591656
+	35279  -  MemoryUsage of job (MB)
+	36125336  -  ResidentSetSize of job (KB)
+...
+021 (1653139.000.000) 11/05 00:55:19 Error from starter on slot1_1@b9g57n2077.cern.ch:
+	Job has gone over cgroup memory limit of 18000 megabytes. Last measured usage: 35734 megabytes.  Consider resubmitting with a higher request_memory.
+	Code 34 Subcode 0
+...
+004 (1653139.000.000) 11/05 00:55:19 Job was evicted.
+	(0) CPU times
+		Usr 0 00:06:25, Sys 0 00:38:48  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	2153  -  Run Bytes Received By Job
+	Error from slot1_1@b9g57n2077.cern.ch: Job has gone over cgroup memory limit of 18000 megabytes. Last measured usage: 35734 megabytes.  Consider resubmitting with a higher request_memory.
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     0.53        6         6 
+	   Disk (KB)            :   124     4194304   4195332 
+	   GPUs                 :     0           1         1 "GPU-f7b29eb4"
+	   GpusMemory (MB)      :   522                       
+	   Memory (MB)          : 35279       18000     18000 
+	   TimeSlotBusy (s)     :  4117                       
+...
+012 (1653139.000.000) 11/05 00:55:19 Job was held.
+	Error from slot1_1@b9g57n2077.cern.ch: Job has gone over cgroup memory limit of 18000 megabytes. Last measured usage: 35734 megabytes.  Consider resubmitting with a higher request_memory.
+	Code 34 Subcode 0
+...
+009 (1653139.000.000) 11/05 08:37:25 Job was aborted.
+	via condor_rm (by user evilla)
+...

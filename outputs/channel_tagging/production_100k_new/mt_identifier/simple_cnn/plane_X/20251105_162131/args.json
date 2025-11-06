@@ -1,0 +1,8 @@
+{
+  "input_json": "json/channel_tagging/production_training_100k_new.json",
+  "output_folder": null,
+  "data_dir": null,
+  "plane": "X",
+  "max_samples": null,
+  "verbose": "False"
+}

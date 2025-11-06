@@ -1,0 +1,75 @@
+000 (1653493.000.000) 11/05 08:37:38 Job submitted from host: <188.185.129.8:9618?addrs=188.185.129.8-9618+[2001-1458-d03-1--100-8a]-9618&alias=bigbird101.cern.ch&noUDP&sock=schedd_3613352_8137>
+...
+040 (1653493.000.000) 11/05 08:43:10 Started transferring input files
+	Transferring to host: <188.185.92.254:9618?addrs=188.185.92.254-9618+[2001-1458-d00-6c--100-8f]-9618&alias=b9g57n6544.cern.ch&noUDP&sock=slot1_1_5570_519c_27562>
+...
+040 (1653493.000.000) 11/05 08:43:10 Finished transferring input files
+...
+001 (1653493.000.000) 11/05 08:43:11 Job executing on host: <188.185.92.254:9618?addrs=188.185.92.254-9618+[2001-1458-d00-6c--100-8f]-9618&alias=b9g57n6544.cern.ch&noUDP&sock=startd_4788_bf8b>
+	SlotName: slot1_1@b9g57n6544.cern.ch
+	AvailableGPUs = { GPUs_GPU_d37adc4d }
+	CondorScratchDir = "/pool/condor/dir_2788491"
+	Cpus = 14
+	Disk = 4195534
+	GPUs = 1
+	GPUs_GPU_d37adc4d = [ Id = "GPU-d37adc4d"; ClockMhz = 1410.0; Capability = 8.0; CoresPerCU = 64; DeviceName = "NVIDIA A100-PCIE-40GB"; DeviceUuid = "d37adc4d-e344-c767-4e86-ba90ba7e2e50"; ECCEnabled = true; ComputeUnits = 108; DriverVersion = 12.9; DevicePciBusId = "0000:06:00.0"; GlobalMemoryMb = 40441; MaxSupportedVersion = 12090 ]
+	Memory = 42000
+...
+006 (1653493.000.000) 11/05 08:43:25 Image size of job updated: 27568
+	27  -  MemoryUsage of job (MB)
+	27568  -  ResidentSetSize of job (KB)
+...
+006 (1653493.000.000) 11/05 08:48:26 Image size of job updated: 40340560
+	39396  -  MemoryUsage of job (MB)
+	40340560  -  ResidentSetSize of job (KB)
+...
+006 (1653493.000.000) 11/05 08:53:26 Image size of job updated: 84780488
+	73523  -  MemoryUsage of job (MB)
+	75286656  -  ResidentSetSize of job (KB)
+...
+006 (1653493.000.000) 11/05 08:58:27 Image size of job updated: 84780488
+	82645  -  MemoryUsage of job (MB)
+	84628104  -  ResidentSetSize of job (KB)
+...
+006 (1653493.000.000) 11/05 09:03:28 Image size of job updated: 85340252
+	82645  -  MemoryUsage of job (MB)
+	84628104  -  ResidentSetSize of job (KB)
+...
+006 (1653493.000.000) 11/05 09:18:30 Image size of job updated: 85340252
+	82972  -  MemoryUsage of job (MB)
+	84962784  -  ResidentSetSize of job (KB)
+...
+006 (1653493.000.000) 11/05 09:23:30 Image size of job updated: 85417096
+	83408  -  MemoryUsage of job (MB)
+	85409704  -  ResidentSetSize of job (KB)
+...
+006 (1653493.000.000) 11/05 09:28:31 Image size of job updated: 85427904
+	83409  -  MemoryUsage of job (MB)
+	85410424  -  ResidentSetSize of job (KB)
+...
+021 (1653493.000.000) 11/05 12:31:22 Error from starter on slot1_1@b9g57n6544.cern.ch:
+	Job has gone over cgroup memory limit of 42000 megabytes. Last measured usage: 83425 megabytes.  Consider resubmitting with a higher request_memory.
+	Code 34 Subcode 0
+...
+004 (1653493.000.000) 11/05 12:31:22 Job was evicted.
+	(0) CPU times
+		Usr 0 00:23:20, Sys 0 03:12:20  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	0  -  Run Bytes Sent By Job
+	2153  -  Run Bytes Received By Job
+	Error from slot1_1@b9g57n6544.cern.ch: Job has gone over cgroup memory limit of 42000 megabytes. Last measured usage: 83425 megabytes.  Consider resubmitting with a higher request_memory.
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :     0.56       14        14 
+	   Disk (KB)            :   272     4194304   4195534 
+	   GPUs                 :     0           1         1 "GPU-d37adc4d"
+	   GpusMemory (MB)      :   522                       
+	   Memory (MB)          : 83409       42000     42000 
+	   TimeSlotBusy (s)     : 13693                       
+...
+012 (1653493.000.000) 11/05 12:31:22 Job was held.
+	Error from slot1_1@b9g57n6544.cern.ch: Job has gone over cgroup memory limit of 42000 megabytes. Last measured usage: 83425 megabytes.  Consider resubmitting with a higher request_memory.
+	Code 34 Subcode 0
+...
+009 (1653493.000.000) 11/05 13:23:58 Job was aborted.
+	via condor_rm (by user evilla)
+...

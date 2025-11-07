@@ -449,12 +449,19 @@ def extract_direction_labels(metadata: np.ndarray) -> np.ndarray:
     Extract direction vector labels from metadata for electron direction regression.
     
     Args:
-        metadata: numpy array of shape (N, 12) with metadata
+        metadata: numpy array of shape (N, 12 or 13) with metadata
         
     Returns:
-        directions: numpy array of shape (N, 3) with direction vectors (x, y, z)
+        directions: numpy array of shape (N, 3) with NORMALIZED direction vectors (x, y, z)
     """
-    # Columns 3-5 contain direction (x, y, z)
+    # Columns 6-8 (+offset) contain momentum (px, py, pz) - NOT position!
     offset, _ = _metadata_layout(metadata.shape[1])
-    directions = metadata[:, 3 + offset:6 + offset].astype(np.float32)
+    momentum = metadata[:, 6 + offset:9 + offset].astype(np.float32)
+    
+    # Normalize to unit vectors (direction only, not magnitude)
+    norms = np.linalg.norm(momentum, axis=1, keepdims=True)
+    # Avoid division by zero
+    norms = np.where(norms == 0, 1, norms)
+    directions = momentum / norms
+    
     return directions

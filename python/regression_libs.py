@@ -140,11 +140,6 @@ def test_model(model, test, output_folder):
                 # Single element, assume it's data and no labels
                 data = batch
                 labels = None
-        # Extract data and labels from batch (handle tuple with metadata)
-        if len(batch) == 3:
-            data, labels, _ = batch  # Unpack data, labels, metadata
-        else:
-            data, labels = batch
         test_data.append(data)
         test_labels.append(labels.numpy() if hasattr(labels, "numpy") else labels)
     test_labels = np.concatenate(test_labels, axis=0)

@@ -325,10 +325,9 @@ def save_labels_in_a_map(dataset_label, output_folder, name="map"):
 
     plt.figure(figsize=(10, 10))
     plt.title("Labels map")
-    thetas = np.mod(thetas, 2*np.pi)
-    phis = np.mod(phis, np.pi)
-    # get the indices
-    indices = healpy.ang2pix(nside, phis, thetas)
+    # thetas and phis are already in correct ranges from conversion function
+    # get the indices (healpy.ang2pix expects theta first, then phi)
+    indices = healpy.ang2pix(nside, thetas, phis)
     # fill the map
     for index in indices:
         map_hp[index] += 1
@@ -355,13 +354,18 @@ def save_samples_from_ds(dataset, labels, output_folder, name="img", n_samples=1
     plt.close()
             
 def from_coordinate_to_theta_phi(coords):
-    # nomalize the coordinates
-    coords = coords/np.linalg.norm(coords, axis=1)[:, np.newaxis]
+    # normalize the coordinates
+    norms = np.linalg.norm(coords, axis=1, keepdims=True)
+    # Avoid division by zero - replace zero norms with 1
+    norms = np.where(norms == 0, 1, norms)
+    coords = coords / norms
+    
     x, y, z = coords[:,0], coords[:,1], coords[:,2]
-    r = np.sqrt(x**2 + y**2 + z**2)
-
-    phi = np.arccos(y/r)
-    theta = np.arctan2(z, x)
+    
+    # Healpy convention: theta = polar angle from z-axis [0, pi], phi = azimuthal angle [0, 2*pi]
+    theta = np.arccos(np.clip(z, -1, 1))  # Polar angle from z-axis
+    phi = np.arctan2(y, x)  # Azimuthal angle in x-y plane
+    phi = np.mod(phi, 2*np.pi)  # Ensure phi is in [0, 2*pi]
 
     return np.array([theta, phi]).T
 

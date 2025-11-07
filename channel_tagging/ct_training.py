@@ -332,14 +332,17 @@ def main():
     except:
         model_source = "Source code not available"
     
-    gpl.create_report(
-        output_folder,
-        model_name,
-        config,
-        model_source
-    )
-    
-    print(f"✓ Report generated in: {output_folder}")
+    try:
+        gpl.create_report(
+            output_folder,
+            model_name,
+            config,
+            model_source
+        )
+        print(f"✓ Report generated in: {output_folder}")
+    except Exception as e:
+        print(f"⚠ Warning: Could not generate full report: {e}")
+        print("  (This is not critical - model training and evaluation completed successfully)")
     
     # Final summary
     print("\n" + "="*70)

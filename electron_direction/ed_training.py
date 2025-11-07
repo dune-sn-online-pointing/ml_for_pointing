@@ -151,6 +151,8 @@ def select_model(model_name):
         import models.hyperopt_simple_cnn as selected_model
     elif model_name == 'hyperopt_simple_cnn_multiclass':
         import models.hyperopt_simple_cnn_multiclass as selected_model
+    elif model_name == 'd3_views_hp_simple_cnn':
+        import models.d3_views_hp_simple_cnn as selected_model
     else:
         raise ValueError(f"Unknown model: {model_name}")
     
@@ -235,46 +237,69 @@ def main():
     if "epochs" not in model_parameters:
         model_parameters["epochs"] = model_parameters.get("epochs", 50)
 
-    # Create and train model
-    print("\n" + "="*70)
-    print("STEP 2: MODEL TRAINING")
-    print("="*70)
-    
-    model, history = selected_model.create_and_train_model(
-        n_outputs=model_parameters["output_dim"],
-        model_parameters=model_parameters,
-        train=train,
-        validation=validation,
-        output_folder=output_folder,
-        model_name=model_name
-    )
-    
-    print("\n✓ Model training completed")
-    
-    # Save the model
-    print("\n" + "="*70)
-    print("STEP 3: SAVING MODEL")
-    print("="*70)
-    
+    # Check if model already exists
     model_path = os.path.join(output_folder, f'{model_name}.h5')
-    model.save(model_path)
-    print(f"✓ Model saved to: {model_path}")
     
-    # Save the training history
-    gpl.save_history(history, output_folder)
-    print(f"✓ Training history saved")
+    if os.path.exists(model_path):
+        print("\n" + "="*70)
+        print("STEP 2: MODEL TRAINING (SKIPPED)")
+        print("="*70)
+        print(f"⚠ Model already exists at: {model_path}")
+        print("⚠ Skipping training and loading existing model...")
+        
+        import keras
+        model = keras.models.load_model(model_path)
+        print("✓ Existing model loaded successfully")
+        history = None
+    else:
+        # Create and train model
+        print("\n" + "="*70)
+        print("STEP 2: MODEL TRAINING")
+        print("="*70)
+        
+        model, history = selected_model.create_and_train_model(
+            n_outputs=model_parameters["output_dim"],
+            model_parameters=model_parameters,
+            train=train,
+            validation=validation,
+            output_folder=output_folder,
+            model_name=model_name
+        )
+        
+        print("\n✓ Model training completed")
+        
+        # Save the model
+        print("\n" + "="*70)
+        print("STEP 3: SAVING MODEL")
+        print("="*70)
+        
+        model.save(model_path)
+        print(f"✓ Model saved to: {model_path}")
+        
+        # Save the training history
+        gpl.save_history(history, output_folder)
+        print(f"✓ Training history saved")
     
     # Test the model
     print("\n" + "="*70)
     print("STEP 4: MODEL EVALUATION")
     print("="*70)
     
-    # Test the regression model using regression libs
-    rl.test_model(
-        model,
-        test,
-        output_folder
-    )
+    # Check if evaluation already exists
+    architecture_path = os.path.join(output_folder, "architecture.png")
+    map_true_path = os.path.join(output_folder, "map_true.png")
+    
+    if os.path.exists(architecture_path) and os.path.exists(map_true_path):
+        print("⚠ Evaluation files already exist. Skipping test...")
+        print(f"  Found: {architecture_path}")
+        print(f"  Found: {map_true_path}")
+    else:
+        # Test the regression model using regression libs
+        rl.test_model(
+            model,
+            test,
+            output_folder
+        )
     
     print("\n✓ Model evaluation completed")
     

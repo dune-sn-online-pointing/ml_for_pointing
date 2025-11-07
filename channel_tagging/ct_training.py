@@ -233,11 +233,14 @@ def main():
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'python'))
         import streaming_data_loader as sdl
         
+        preprocessing_config = config.get('preprocessing', None)
+        
         train, validation, test = sdl.prepare_data_streaming(
             data_dirs=data_dirs,
             plane=args.plane,
             dataset_parameters=dataset_parameters,
-            output_folder=output_folder
+            output_folder=output_folder,
+            preprocessing_config=preprocessing_config
         )
     elif len(data_dirs) == 1:
         train, validation, test = cl.prepare_data_from_npz(
@@ -254,45 +257,68 @@ def main():
             output_folder=output_folder
         )
     
-    # Create and train model
-    print("\n" + "="*70)
-    print("STEP 2: MODEL TRAINING")
-    print("="*70)
-    
-    model, history = selected_model.create_and_train_model(
-        model_parameters=model_parameters,
-        train=train,
-        validation=validation,
-        output_folder=output_folder,
-        model_name=model_name
-    )
-    
-    print("\n✓ Model training completed")
-    
-    # Save the model
-    print("\n" + "="*70)
-    print("STEP 3: SAVING MODEL")
-    print("="*70)
-    
+    # Check if model already exists
     model_path = os.path.join(output_folder, f'{model_name}.h5')
-    model.save(model_path)
-    print(f"✓ Model saved to: {model_path}")
     
-    # Save the training history
-    gpl.save_history(history, output_folder)
-    print(f"✓ Training history saved")
+    if os.path.exists(model_path):
+        print("\n" + "="*70)
+        print("STEP 2: MODEL TRAINING (SKIPPED)")
+        print("="*70)
+        print(f"⚠ Model already exists at: {model_path}")
+        print("⚠ Skipping training and loading existing model...")
+        
+        import keras
+        model = keras.models.load_model(model_path)
+        print("✓ Existing model loaded successfully")
+        history = None
+    else:
+        # Create and train model
+        print("\n" + "="*70)
+        print("STEP 2: MODEL TRAINING")
+        print("="*70)
+        
+        model, history = selected_model.create_and_train_model(
+            model_parameters=model_parameters,
+            train=train,
+            validation=validation,
+            output_folder=output_folder,
+            model_name=model_name
+        )
+        
+        print("\n✓ Model training completed")
+        
+        # Save the model
+        print("\n" + "="*70)
+        print("STEP 3: SAVING MODEL")
+        print("="*70)
+        
+        model.save(model_path)
+        print(f"✓ Model saved to: {model_path}")
+        
+        # Save the training history
+        gpl.save_history(history, output_folder)
+        print(f"✓ Training history saved")
     
     # Test the model
     print("\n" + "="*70)
     print("STEP 4: MODEL EVALUATION")
     print("="*70)
     
-    cl.test_model(
-        model,
-        test,
-        output_folder,
-        label_names=["Background", "Channel Tagging"]
-    )
+    # Check if evaluation already exists
+    confusion_matrix_path = os.path.join(output_folder, "confusion_matrix.png")
+    architecture_path = os.path.join(output_folder, "architecture.png")
+    
+    if os.path.exists(confusion_matrix_path) and os.path.exists(architecture_path):
+        print("⚠ Evaluation files already exist. Skipping test...")
+        print(f"  Found: {confusion_matrix_path}")
+        print(f"  Found: {architecture_path}")
+    else:
+        cl.test_model(
+            model,
+            test,
+            output_folder,
+            label_names=["Background", "Channel Tagging"]
+        )
     
     print("\n✓ Model evaluation completed")
     

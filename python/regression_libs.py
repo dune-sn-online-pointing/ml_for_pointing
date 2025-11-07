@@ -127,23 +127,32 @@ def test_model(model, test, output_folder):
     # Test the model and extract labels
     # Note: We need to extract labels BEFORE model.predict() consumes the dataset
     print("Extracting test labels...")
-    test_labels = []
-    test_data = []
-    for batch in test:
-        # Robust unpacking for both regular and streaming datasets
-        try:
-            data, labels, _ = batch  # Try 3-tuple (streaming with metadata)
-        except (ValueError, TypeError):
+    
+    # Check if test is a tuple (images, labels) or a tf.data.Dataset
+    if isinstance(test, tuple) and len(test) == 2:
+        # Direct tuple of (images, labels) - no iteration needed
+        test_data, test_labels = test
+        print(f"Using tuple format: data shape {test_data.shape}, labels shape {test_labels.shape}")
+    else:
+        # It's a dataset - iterate over batches
+        test_labels = []
+        test_data = []
+        for batch in test:
+            # Robust unpacking for both regular and streaming datasets
             try:
-                data, labels = batch  # Try 2-tuple (regular dataset)
+                data, labels, _ = batch  # Try 3-tuple (streaming with metadata)
             except (ValueError, TypeError):
-                # Single element, assume it's data and no labels
-                data = batch
-                labels = None
-        test_data.append(data)
-        test_labels.append(labels.numpy() if hasattr(labels, "numpy") else labels)
-    test_labels = np.concatenate(test_labels, axis=0)
-    test_data = np.concatenate([d.numpy() if hasattr(d, "numpy") else d for d in test_data], axis=0)
+                try:
+                    data, labels = batch  # Try 2-tuple (regular dataset)
+                except (ValueError, TypeError):
+                    # Single element, assume it's data and no labels
+                    data = batch
+                    labels = None
+            test_data.append(data)
+            if labels is not None:
+                test_labels.append(labels.numpy() if hasattr(labels, "numpy") else labels)
+        test_labels = np.concatenate(test_labels, axis=0)
+        test_data = np.concatenate([d.numpy() if hasattr(d, "numpy") else d for d in test_data], axis=0)
     
     print("Doing some test...")
     predictions = model.predict(test_data)      

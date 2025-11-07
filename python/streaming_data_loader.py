@@ -12,6 +12,73 @@ from typing import List, Tuple, Generator
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import data_loader as dl
+from scipy.ndimage import zoom
+
+
+def preprocess_image(img, target_shape=None, method='resize'):
+    """
+    Preprocess image to target shape.
+    
+    Args:
+        img: Input image (H, W) or (H, W, C)
+        target_shape: Target shape (H, W) or (H, W, C)
+        method: 'resize' (bilinear) or 'center_crop'
+        
+    Returns:
+        Preprocessed image
+    """
+    if target_shape is None:
+        return img
+    
+    # Handle channel dimension
+    has_channel = len(img.shape) == 3
+    if has_channel:
+        target_h, target_w, target_c = target_shape
+        img_h, img_w, img_c = img.shape
+    else:
+        if len(target_shape) == 3:
+            target_h, target_w = target_shape[:2]
+        else:
+            target_h, target_w = target_shape
+        img_h, img_w = img.shape
+    
+    if method == 'resize':
+        # Bilinear resize
+        if has_channel:
+            zoom_factors = (target_h / img_h, target_w / img_w, 1)
+        else:
+            zoom_factors = (target_h / img_h, target_w / img_w)
+        
+        resized = zoom(img, zoom_factors, order=1)  # order=1 is bilinear
+        return resized.astype(np.float32)
+        
+    elif method == 'center_crop':
+        # Center crop to target size
+        start_h = max(0, (img_h - target_h) // 2)
+        start_w = max(0, (img_w - target_w) // 2)
+        
+        end_h = start_h + target_h
+        end_w = start_w + target_w
+        
+        if has_channel:
+            cropped = img[start_h:end_h, start_w:end_w, :]
+        else:
+            cropped = img[start_h:end_h, start_w:end_w]
+        
+        # If image is smaller than target, pad with zeros
+        if cropped.shape[0] < target_h or cropped.shape[1] < target_w:
+            if has_channel:
+                padded = np.zeros((target_h, target_w, img_c), dtype=np.float32)
+                padded[:cropped.shape[0], :cropped.shape[1], :] = cropped
+            else:
+                padded = np.zeros((target_h, target_w), dtype=np.float32)
+                padded[:cropped.shape[0], :cropped.shape[1]] = cropped
+            return padded
+        
+        return cropped.astype(np.float32)
+    
+    else:
+        raise ValueError(f"Unknown preprocessing method: {method}")
 
 
 def extract_label_from_metadata(metadata, use_dict_format=False):
@@ -48,7 +115,9 @@ def create_streaming_dataset(
     balance_data: bool = False,
     max_samples: int = None,
     batch_pattern: str = "*_plane{plane}.npz",
-    prefetch: int = 2
+    prefetch: int = 2,
+    target_shape: tuple = None,
+    preprocessing: str = 'resize'
 ) -> Tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset, dict]:
     """
     Create TensorFlow datasets that stream from disk using generators.
@@ -62,6 +131,8 @@ def create_streaming_dataset(
         max_samples: Maximum samples to use (None for all)
         batch_pattern: Pattern for finding batch files
         prefetch: Number of batches to prefetch
+        target_shape: Target shape for images (H, W) or (H, W, C). None to keep original
+        preprocessing: 'resize' for bilinear resizing or 'center_crop' for center cropping
     
     Returns:
         train_dataset, val_dataset, test_dataset, stats_dict
@@ -185,6 +256,10 @@ def create_streaming_dataset(
                         samples_yielded += 1
                         continue
                     
+                    # Preprocess image if target_shape is specified
+                    if target_shape is not None:
+                        img = preprocess_image(img, target_shape, method=preprocessing)
+                    
                     yield img.astype(np.float32), label
                     samples_yielded += 1
                     
@@ -195,8 +270,17 @@ def create_streaming_dataset(
     # Create datasets
     def make_dataset(start_idx, end_idx, is_training=False):
         """Create a tf.data.Dataset from generator."""
+        # Use target_shape if preprocessing is enabled, otherwise use original size
+        if target_shape is not None:
+            if len(target_shape) == 2:
+                img_shape = (*target_shape, 1)
+            else:
+                img_shape = target_shape
+        else:
+            img_shape = (208, 1242, 1)  # Default size for volume_images
+        
         output_signature = (
-            tf.TensorSpec(shape=(208, 1242, 1), dtype=tf.float32),  # Updated for volume_images size
+            tf.TensorSpec(shape=img_shape, dtype=tf.float32),
             tf.TensorSpec(shape=(), dtype=tf.float32)
         )
         
@@ -216,6 +300,9 @@ def create_streaming_dataset(
     # Create train/val/test datasets
     train_dataset = make_dataset(0, train_size, is_training=True)
     val_dataset = make_dataset(train_size, train_size + val_size, is_training=False)
+    # CRITICAL: Add .repeat() to validation dataset to allow multiple passes during training
+    # This fixes "OUT_OF_RANGE: End of sequence" errors during hyperopt/validation
+    val_dataset = val_dataset.repeat()
     test_dataset = make_dataset(train_size + val_size, total_samples, is_training=False)
     
     stats = {
@@ -233,7 +320,7 @@ def create_streaming_dataset(
     
     return train_dataset, val_dataset, test_dataset, stats
 
-def prepare_data_streaming(data_dirs, plane, dataset_parameters, output_folder):
+def prepare_data_streaming(data_dirs, plane, dataset_parameters, output_folder, preprocessing_config=None):
     """
     Wrapper function compatible with existing training scripts.
     Returns datasets and metadata in expected format.
@@ -243,13 +330,22 @@ def prepare_data_streaming(data_dirs, plane, dataset_parameters, output_folder):
     balance_data = dataset_parameters.get('balance_data', False)
     max_samples = dataset_parameters.get('max_samples', None)
     
+    # Get preprocessing parameters
+    target_shape = None
+    preprocessing_method = 'resize'
+    if preprocessing_config:
+        target_shape = tuple(preprocessing_config.get('target_shape', []))  if preprocessing_config.get('target_shape') else None
+        preprocessing_method = preprocessing_config.get('method', 'resize')
+    
     train_ds, val_ds, test_ds, stats = create_streaming_dataset(
         data_dirs=data_dirs if isinstance(data_dirs, list) else [data_dirs],
         plane=plane,
         batch_size=batch_size,
         shuffle=shuffle,
         balance_data=balance_data,
-        max_samples=max_samples
+        max_samples=max_samples,
+        target_shape=target_shape,
+        preprocessing=preprocessing_method
     )
     
     # Return in format expected by training script

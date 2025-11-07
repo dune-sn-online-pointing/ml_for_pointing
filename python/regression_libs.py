@@ -463,10 +463,25 @@ def prepare_data_from_npz_regression(data_dir, plane, dataset_parameters, output
         verbose=True
     )
     
-    # Extract direction labels (columns 3-5: x, y, z)
+    # CRITICAL: Filter for main tracks only (is_main_track=1 in column 1+offset)
+    offset, _ = dl._metadata_layout(metadata.shape[1])
+    is_main_track = metadata[:, 1 + offset].astype(bool)
+    
+    print(f"\nFiltering for main tracks:")
+    print(f"  Total samples: {len(metadata)}")
+    print(f"  Main tracks: {np.sum(is_main_track)} ({100*np.sum(is_main_track)/len(metadata):.1f}%)")
+    print(f"  Background: {np.sum(~is_main_track)} ({100*np.sum(~is_main_track)/len(metadata):.1f}%)")
+    
+    # Apply filter
+    dataset_img = dataset_img[is_main_track]
+    metadata = metadata[is_main_track]
+    
+    print(f"  After filtering: {len(metadata)} main track samples")
+    
+    # Extract direction labels (columns 6-8+offset: px, py, pz, normalized)
     dataset_label = dl.extract_direction_labels(metadata)
     
-    print(f"Dataset shape: {dataset_img.shape}")
+    print(f"\nDataset shape: {dataset_img.shape}")
     print(f"Direction labels shape: {dataset_label.shape}")
     print(f"Direction labels range: [{dataset_label.min():.3f}, {dataset_label.max():.3f}]")
     

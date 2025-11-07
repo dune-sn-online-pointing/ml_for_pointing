@@ -13,7 +13,7 @@ sys.path.append("../../python/")
 import general_purpose_libs as gpl
 import regression_libs as rl
 
-def build_model(optimizable_parameters, train, validation, output_folder, input_shape):
+def build_model(optimizable_parameters, train, validation, output_folder, input_shape, validation_freq=1):
     # Unpack train/validation if they are tuples (streaming mode)
     if isinstance(train, tuple):
         train = train[0]
@@ -67,7 +67,9 @@ def create_and_train_model(model_parameters, train, validation, output_folder, m
 
     input_shape = model_parameters['input_shape']
     hp_max_evals = model_parameters['hp_max_evals']
+    validation_freq = model_parameters.get('validation_freq', 1)
 
+    validation_freq = model_parameters.get('validation_freq', 1)
     space = {
         'n_conv_layers': hp.hp.choice('n_conv_layers', space_options['n_conv_layers']),
         'n_dense_layers': hp.hp.choice('n_dense_layers', space_options['n_dense_layers']),
@@ -85,7 +87,8 @@ def create_and_train_model(model_parameters, train, validation, output_folder, m
                                         train=train, 
                                         validation=validation, 
                                         output_folder=output_folder,
-                                        input_shape=input_shape
+                                        input_shape=input_shape,
+                                        validation_freq=validation_freq
                                         ),
         space=space,
         algo=hp.tpe.suggest,
@@ -192,7 +195,7 @@ def plot_hyperparameter_search(trials, output_folder, model_name):
     # plt.savefig(output_folder + model_name + '_hyperparameter_search.png')
     # plt.close()
 
-def hypertest_model(optimizable_parameters, train, validation, output_folder, input_shape):
+def hypertest_model(optimizable_parameters, train, validation, output_folder, input_shape, validation_freq=1):
     is_comp=is_compatible(optimizable_parameters, input_shape)
     if not is_comp:
         return {'loss': 9999, 'status': hp.STATUS_FAIL}
@@ -203,7 +206,8 @@ def hypertest_model(optimizable_parameters, train, validation, output_folder, in
                                 train=train, 
                                 validation=validation, 
                                 output_folder=output_folder, 
-                                input_shape=input_shape)
+                                input_shape=input_shape,
+                                             validation_freq=validation_freq)
 
     loss, accuracy=model.evaluate(validation)
     print("loss: ", loss, " accuracy: ", accuracy)

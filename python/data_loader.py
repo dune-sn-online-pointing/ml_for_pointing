@@ -15,7 +15,7 @@ def _metadata_layout(num_columns: int) -> tuple[int, bool]:
     if num_columns == 12:
         return 0, True
     if num_columns == 13:
-        return 1, True
+        return 0, True  # FIXED: Was 1, should be 0
     raise ValueError(
         f"Unsupported metadata length: {num_columns}. Expected 11, 12 or 13 columns."
     )
@@ -51,7 +51,7 @@ def parse_metadata(metadata: np.ndarray) -> Dict:
         'is_main_track': bool(metadata[1 + offset]),
         'is_es_interaction': bool(metadata[2 + offset]),
         'true_pos': metadata[3 + offset:6 + offset].copy(),  # [x, y, z]
-        'true_particle_mom': metadata[6 + offset:9 + offset].copy(),  # [px, py, pz]
+        'true_particle_mom': metadata[7 + offset:10 + offset].copy(),  # [px, py, pz]
         'true_nu_energy': float(metadata[9 + offset]),
         'true_particle_energy': float(metadata[10 + offset]),
     }
@@ -454,9 +454,9 @@ def extract_direction_labels(metadata: np.ndarray) -> np.ndarray:
     Returns:
         directions: numpy array of shape (N, 3) with NORMALIZED direction vectors (x, y, z)
     """
-    # Columns 6-8 (+offset) contain momentum (px, py, pz) - NOT position!
+    # Columns 7-9 (+offset) contain momentum (px, py, pz) in GeV/c
     offset, _ = _metadata_layout(metadata.shape[1])
-    momentum = metadata[:, 6 + offset:9 + offset].astype(np.float32)
+    momentum = metadata[:, 7 + offset:10 + offset].astype(np.float32)
     
     # Normalize to unit vectors (direction only, not magnitude)
     norms = np.linalg.norm(momentum, axis=1, keepdims=True)

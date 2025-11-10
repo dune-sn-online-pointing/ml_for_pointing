@@ -230,7 +230,8 @@ def prepare_data(input_data, input_label, dataset_parameters, output_folder):
     print("Creating the dataset objects...")
     with tf.device("CPU"):
         train = tf.data.Dataset.from_tensor_slices((train_images, train_labels)).shuffle(10000).batch(32)
-        validation = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels)).batch(32)
+        # CRITICAL: Add .repeat() to validation dataset to allow multiple passes during hyperopt
+        validation = tf.data.Dataset.from_tensor_slices((validation_images, validation_labels)).batch(32).repeat()
         test = tf.data.Dataset.from_tensor_slices((test_images, test_labels)).batch(32)
     print("Datasets created.")
     return train, validation, test

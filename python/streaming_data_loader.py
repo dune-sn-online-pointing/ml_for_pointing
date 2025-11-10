@@ -299,6 +299,9 @@ def create_streaming_dataset(
     
     # Create train/val/test datasets
     train_dataset = make_dataset(0, train_size, is_training=True)
+    # CRITICAL: Add .repeat() to train dataset for multiple epochs
+    train_dataset = train_dataset.repeat()
+    
     val_dataset = make_dataset(train_size, train_size + val_size, is_training=False)
     # CRITICAL: Add .repeat() to validation dataset to allow multiple passes during training
     # This fixes "OUT_OF_RANGE: End of sequence" errors during hyperopt/validation

@@ -1,0 +1,37 @@
+{
+  "description": "Single-plane X with angular loss - v5_angular",
+  "version": "v5_angular",
+  
+  "data_dir": "/eos/user/e/evilla/dune/sn-tps/production_es/cluster_images_fixed_matching",
+  "plane": "x",
+  "output_dir": "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/training_output/electron_direction",
+  "model_name": "single_plane_x_angular_v5",
+  
+  "loss_function": "angular",
+  
+  "dataset_parameters": {
+    "max_samples": null,
+    "min_energy": null,
+    "train_fraction": 0.7,
+    "val_fraction": 0.15,
+    "test_fraction": 0.15,
+    "random_seed": 42
+  },
+  
+  "hyperopt_parameters": {
+    "max_trials": 20,
+    "epochs_per_trial": 100,
+    "batch_size": 64,
+    "early_stopping_patience": 15,
+    
+    "search_space": {
+      "n_conv_layers": [3, 4, 5],
+      "n_filters": [16, 32, 64, 128],
+      "kernel_size": [3, 5, 7],
+      "n_dense_layers": [1, 2, 3],
+      "dense_units": [256, 512, 1024],
+      "dropout_rate": [0.2, 0.3, 0.4, 0.5],
+      "learning_rate": [0.0001, 0.0003, 0.0005, 0.001, 0.003]
+    }
+  }
+}

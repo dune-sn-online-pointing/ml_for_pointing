@@ -1,0 +1,34 @@
+{
+    "output_folder": "/eos/user/e/evilla/dune/sn-tps/neural_networks",
+    "model_name": "hyperopt_simple_cnn",
+    "data_directories": [
+        "/eos/user/e/evilla/dune/sn-tps/production_es/images_es_prod_main_tick3_ch2_min2_tot3_e2p0"
+    ],
+    "plane": "X",
+    "dataset_parameters": {
+        "train_fraction": 0.7,
+        "val_fraction": 0.15,
+        "test_fraction": 0.15,
+        "shuffle_data": true,
+        "balance_data": false,
+        "batch_size": 32,
+        "remove_y_direction": false
+    },
+    "model_parameters": {
+        "input_shape": [128, 16, 1],
+        "output_dim": 3,
+        "loss_function": "mse",
+        "hp_max_evals": 20,
+        "space_options": {
+            "n_conv_layers": [2, 3, 4],
+            "n_dense_layers": [2, 3],
+            "n_filters": [32, 64, 128],
+            "kernel_size": [3, 5],
+            "n_dense_units": [64, 128, 256],
+            "learning_rate": [0.0001, 0.001],
+            "decay_rate": [0.90, 0.95, 0.99]
+        },
+        "epochs": 50,
+        "early_stopping_patience": 10
+    }
+}

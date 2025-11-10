@@ -54,9 +54,17 @@ def build_model(optimizable_parameters, train, validation, output_folder, input_
             verbose=1)
     ]    
 
+    # Add .repeat() to validation dataset to prevent exhaustion
+    # This makes it infinite so it never runs out during multiple epochs
+    validation_repeated = validation.repeat()
+
+    # Let Keras auto-determine validation_steps from the dataset
+    # Hardcoding causes issues with streaming generators that may run out
     history = model.fit(train, 
+                        steps_per_epoch=1000,  # Enough steps to cover most of the dataset
                         epochs=200, 
-                        validation_data=validation, 
+                        validation_data=validation_repeated, 
+                        validation_freq=validation_freq,  # Validate every N epochs
                         callbacks=callbacks,
                         verbose=0)
 
@@ -209,7 +217,15 @@ def hypertest_model(optimizable_parameters, train, validation, output_folder, in
                                 input_shape=input_shape,
                                              validation_freq=validation_freq)
 
-    loss, accuracy=model.evaluate(validation)
+
+    model, history = build_model(optimizable_parameters=optimizable_parameters, 
+                                        train=train, 
+                                validation=validation, 
+                                output_folder=output_folder, 
+                                                                            input_shape=input_shape,
+                                             validation_freq=validation_freq)
+    
+    loss, accuracy=model.evaluate(validation, steps=200)  # Limit steps for infinite .repeat() dataset
     print("loss: ", loss, " accuracy: ", accuracy)
     with open(output_folder+"hyperopt_progression.txt", "a") as f:
         f.write(str(optimizable_parameters)+"\n")

@@ -120,7 +120,7 @@ def setup_output_directory(config, args):
     
     # Add model name subdirectory
     model_name = config['model_name']
-    output_folder = os.path.join(base_output, 'mt_identifier', model_name)
+    output_folder = os.path.join(base_output, 'electron_direction', model_name)
     
     # Add augmentation coefficient to path if > 1
     aug_coeff = config['dataset_parameters'].get('aug_coefficient', 1)
@@ -164,7 +164,7 @@ def main():
     """Main training pipeline"""
     
     print("\n" + "="*70)
-    print("MAIN TRACK IDENTIFIER TRAINING")
+    print("ELECTRON DIRECTION REGRESSION TRAINING")
     print("="*70)
     
     # Parse arguments

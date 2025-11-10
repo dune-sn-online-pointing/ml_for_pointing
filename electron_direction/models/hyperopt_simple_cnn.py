@@ -58,7 +58,13 @@ def build_model(n_outputs, optimizable_parameters, train, validation, output_fol
 
 def create_and_train_model(n_outputs, model_parameters, train, validation, output_folder, model_name):
     space_options = model_parameters['space_options']
-    if model_parameters['loss_function'] == 'my_loss_function':
+        # Import custom losses if needed
+    if model_parameters['loss_function'] == 'cosine':
+        import sys
+        sys.path.append(os.path.join(os.path.dirname(__file__)))
+        from direction_losses import cosine_similarity_loss
+        loss_function = cosine_similarity_loss
+    elif model_parameters['loss_function'] == 'my_loss_function':
         loss_function = rl.my_loss_function
     elif model_parameters['loss_function'] == 'my_loss_function_both_dir':
         loss_function = rl.my_loss_function_both_dir

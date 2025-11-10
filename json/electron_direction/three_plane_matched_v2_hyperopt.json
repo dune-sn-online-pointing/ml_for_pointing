@@ -1,0 +1,32 @@
+{
+  "description": "Three-plane electron direction with hyperopt - 20 trials, wider parameter space",
+  "version": "v2_hyperopt",
+  
+  "matched_data_file": "/eos/user/e/evilla/dune/sn-tps/production_es/three_plane_matched_50k.npz",
+  "output_folder": "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/training_output",
+  
+  "dataset_parameters": {
+    "train_fraction": 0.7,
+    "val_fraction": 0.15,
+    "test_fraction": 0.15,
+    "shuffle_data": true,
+    "random_seed": 42
+  },
+  
+  "hyperopt_parameters": {
+    "max_trials": 20,
+    "epochs_per_trial": 50,
+    "batch_size": 64,
+    "early_stopping_patience": 10,
+    
+    "search_space": {
+      "n_conv_layers": [2, 3, 4, 5],
+      "n_filters": [32, 64, 96, 128],
+      "kernel_size": [3, 5, 7],
+      "n_dense_layers": [2, 3, 4],
+      "n_dense_units": [128, 256, 384, 512],
+      "learning_rate": [0.0001, 0.0005, 0.001, 0.002],
+      "dropout_rate": [0.2, 0.3, 0.4, 0.5]
+    }
+  }
+}

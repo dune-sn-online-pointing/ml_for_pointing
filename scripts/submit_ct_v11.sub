@@ -21,7 +21,7 @@ request_disk            = 4GB
 
 # Environment
 getenv                  = True
-environment             = "PYTHONUNBUFFERED=1"
+environment             = "PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1"
 
 # Output files
 output                  = /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/logs/CT_V11_VALIDATION_FREQ_X_$(ClusterId).out

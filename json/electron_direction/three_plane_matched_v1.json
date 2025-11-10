@@ -1,0 +1,33 @@
+{
+  "description": "Three-plane electron direction training with pre-matched data (50k triplets)",
+  "version": "v1",
+  
+  "matched_data_file": "/eos/user/e/evilla/dune/sn-tps/production_es/three_plane_matched_50k.npz",
+  
+  "output_folder": "/afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/training_output",
+  
+  "dataset_parameters": {
+    "train_fraction": 0.7,
+    "val_fraction": 0.15,
+    "test_fraction": 0.15,
+    "shuffle_data": true,
+    "random_seed": 42
+  },
+  
+  "model_parameters": {
+    "input_shape": [128, 16, 1],
+    "output_dim": 3,
+    "n_conv_layers": 3,
+    "n_filters": 64,
+    "kernel_size": 3,
+    "n_dense_layers": 2,
+    "n_dense_units": 256,
+    "learning_rate": 0.001,
+    "decay_rate": 0.95
+  },
+  
+  "training_parameters": {
+    "epochs": 100,
+    "batch_size": 64
+  }
+}

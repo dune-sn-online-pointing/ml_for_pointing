@@ -20,7 +20,7 @@
   "model_parameters": {
     "input_shape": [208, 208, 1],
     "hp_max_evals": 5,
-    "validation_freq": 5,
+    "validation_freq": 1,
     "space_options": {
       "n_conv_layers": [2, 3],
       "n_dense_layers": [2, 3],

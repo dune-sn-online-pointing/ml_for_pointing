@@ -16,8 +16,10 @@ def _metadata_layout(num_columns: int) -> tuple[int, bool]:
         return 0, True
     if num_columns == 13:
         return 0, True  # FIXED: Was 1, should be 0
+    if num_columns == 14:
+        return 0, True  # NEW: 14 columns with match_id at column 13
     raise ValueError(
-        f"Unsupported metadata length: {num_columns}. Expected 11, 12 or 13 columns."
+        f"Unsupported metadata length: {num_columns}. Expected 11, 12, 13 or 14 columns."
     )
 
 

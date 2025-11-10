@@ -2,14 +2,31 @@
 # HTCondor wrapper for Channel Tagging training
 set -e
 
-PLANE=${1:-X}
-MAX_SAMPLES=${2:-}
-JSON_CONFIG=${3:-json/channel_tagging/production_training_100k_new.json}
+# Parse arguments with flags
+PLANE="X"
+MAX_SAMPLES=""
+JSON_CONFIG="json/channel_tagging/production_training_100k_new.json"
 
-if [[ "$MAX_SAMPLES" == *.json ]]; then
-    JSON_CONFIG="$MAX_SAMPLES"
-    MAX_SAMPLES=""
-fi
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -p|--plane)
+            PLANE="$2"
+            shift 2
+            ;;
+        -m|--max-samples)
+            MAX_SAMPLES="$2"
+            shift 2
+            ;;
+        -j|--json)
+            JSON_CONFIG="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
 
 echo "========================================="
 echo "HTCondor Channel Tagging Training"

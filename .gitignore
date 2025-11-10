@@ -3,3 +3,4 @@ condor_stuff/
 **/__pycache__/
 custom_python_libs/
 *.cc
+local_packages/

@@ -76,21 +76,10 @@ def build_model(n_outputs, optimizable_parameters, train, validation, output_fol
         metrics=['accuracy'])   
 
     # Stop training when `val_loss` is no longer improving
-    # Create checkpoint directory
-    import os
-    checkpoint_dir = os.path.join(output_folder, 'checkpoints')
-    os.makedirs(checkpoint_dir, exist_ok=True)
-    
     callbacks = [
         keras.callbacks.EarlyStopping(
             monitor='val_loss',
             patience=9,
-            verbose=1),
-        keras.callbacks.ModelCheckpoint(
-            filepath=os.path.join(checkpoint_dir, 'model_epoch_{epoch:02d}_val_loss_{val_loss:.4f}.keras'),
-            monitor='val_loss',
-            save_best_only=False,
-            save_freq='epoch',
             verbose=1)
     ]    
 

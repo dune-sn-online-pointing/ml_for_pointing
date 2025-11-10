@@ -1,9 +1,0 @@
-/pool/condor/dir_1988222/condor_wrapper_channel_tagging.sh: line 30: nvidia-smi: command not found
-2025-11-06 04:17:57.373725: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
-To enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2025-11-06 04:18:01.268957: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
-usage: ct_training.py [-h] --input_json INPUT_JSON
-                      [--output_folder OUTPUT_FOLDER] [--data_dir DATA_DIR]
-                      [--plane {U,V,X}] [--max_samples MAX_SAMPLES]
-                      [--verbose]
-ct_training.py: error: argument --plane: invalid choice: "'X" (choose from 'U', 'V', 'X')

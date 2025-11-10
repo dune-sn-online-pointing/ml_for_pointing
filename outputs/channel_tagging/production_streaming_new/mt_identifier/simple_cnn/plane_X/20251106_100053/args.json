@@ -1,8 +1,0 @@
-{
-  "input_json": "json/channel_tagging/production_v7.json",
-  "output_folder": null,
-  "data_dir": null,
-  "plane": "X",
-  "max_samples": null,
-  "verbose": "False"
-}

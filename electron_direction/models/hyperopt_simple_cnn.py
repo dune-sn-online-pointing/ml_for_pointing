@@ -38,7 +38,7 @@ def build_model(n_outputs, optimizable_parameters, train, validation, output_fol
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
         loss=loss_function,
-        metrics=['mae'])   
+        metrics=['accuracy'])   
 
     # Stop training when `val_loss` is no longer improving
     callbacks = [
@@ -48,9 +48,9 @@ def build_model(n_outputs, optimizable_parameters, train, validation, output_fol
             verbose=1)
     ]    
 
-    history = model.fit(train[0], train[1], 
+    history = model.fit(train, 
                         epochs=200, 
-                        validation_data=(validation[0], validation[1]), 
+                        validation_data=validation, 
                         callbacks=callbacks,
                         verbose=1)
 
@@ -58,13 +58,7 @@ def build_model(n_outputs, optimizable_parameters, train, validation, output_fol
 
 def create_and_train_model(n_outputs, model_parameters, train, validation, output_folder, model_name):
     space_options = model_parameters['space_options']
-        # Import custom losses if needed
-    if model_parameters['loss_function'] == 'cosine':
-        import sys
-        sys.path.append(os.path.join(os.path.dirname(__file__)))
-        from direction_losses import cosine_similarity_loss
-        loss_function = cosine_similarity_loss
-    elif model_parameters['loss_function'] == 'my_loss_function':
+    if model_parameters['loss_function'] == 'my_loss_function':
         loss_function = rl.my_loss_function
     elif model_parameters['loss_function'] == 'my_loss_function_both_dir':
         loss_function = rl.my_loss_function_both_dir
@@ -219,7 +213,7 @@ def hypertest_model(optimizable_parameters, train, validation, n_outputs, output
                                 output_folder=output_folder, 
                                 input_shape=input_shape, 
                                 loss_function=loss_function)
-    loss, accuracy=model.evaluate(validation[0], validation[1])
+    loss, accuracy=model.evaluate(validation)
     print("loss: ", loss, " accuracy: ", accuracy)
     with open(output_folder+"hyperopt_progression.txt", "a") as f:
         f.write("loss: "+str(loss)+"\n")

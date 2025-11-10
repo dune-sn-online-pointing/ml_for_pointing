@@ -1,452 +1,0 @@
-=========================================
-HTCondor GPU Electron Direction Training
-=========================================
-Job started at: Wed Nov  5 12:02:51 AM CET 2025
-Running on host: b9pgpun015.cern.ch
-JSON config: json/electron_direction/production_training.json
-Max samples: all
-=========================================
-Setting up LCG environment: LCG_106_cuda/x86_64-el9-gcc11-opt
-Using LCG Python: /cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/bin/python3
-Python 3.11.9
-
-
-GPU Information:
-Wed Nov  5 00:02:52 2025       
-+-----------------------------------------------------------------------------------------+
-| NVIDIA-SMI 575.51.03              Driver Version: 575.51.03      CUDA Version: 12.9     |
-|-----------------------------------------+------------------------+----------------------+
-| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
-| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
-|                                         |                        |               MIG M. |
-|=========================================+========================+======================|
-|   0  NVIDIA H100 NVL                Off |   00000000:AD:00.0 Off |                    0 |
-| N/A   37C    P0             67W /  400W |       4MiB /  95830MiB |      0%      Default |
-|                                         |                        |             Disabled |
-+-----------------------------------------+------------------------+----------------------+
-                                                                                         
-+-----------------------------------------------------------------------------------------+
-| Processes:                                                                              |
-|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
-|        ID   ID                                                               Usage      |
-|=========================================================================================|
-|  No running processes found                                                             |
-+-----------------------------------------------------------------------------------------+
-
-
-Python version: Python 3.11.9
-Python path: /cvmfs/sft.cern.ch/lcg/views/LCG_106_cuda/x86_64-el9-gcc11-opt/bin/python3
-Checking TensorFlow...
-2025-11-05 00:02:53.724459: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
-2025-11-05 00:02:53.875415: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
-To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX512_FP16 AVX_VNNI AMX_TILE AMX_INT8 AMX_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2025-11-05 00:02:55.594894: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
-TensorFlow version: 2.16.1
-GPUs detected: 1
-  - /physical_device:GPU:0
-
-Running: ./scripts/train_electron_direction.sh --json json/electron_direction/production_training.json
-=========================================
-✓ Sourced LCG environment: LCG_106_cuda/x86_64-el9-gcc11-opt
-✓ Added local packages to PYTHONPATH
-[0;34m[INFO][0m ML for Pointing Environment
-[0;34m[INFO][0m Repository: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing
-[0;34m[INFO][0m Python modules: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/python
-[0;34m[INFO][0m Data directory: /eos/home-e/evilla/dune/sn-tps/images_test
-[0;34m[INFO][0m Output directory: /eos/user/e/evilla/dune/sn-tps/neural_networks
-[0;34m[INFO][0m Python version: 3.11.9
-[0;32m[SUCCESS][0m TensorFlow 2.16.1 is available
-[INFO] ML for Pointing Environment
-[INFO] Repository: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing
-[INFO] Python modules: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/python
-[INFO] Data directory: /eos/home-e/evilla/dune/sn-tps/images_test
-[INFO] Output directory: 
-[INFO] Python version: 3.11.9
-[SUCCESS] TensorFlow 2.16.1 is available
-[INFO] Starting Electron Direction Regressor Training
-[INFO] Configuration: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/electron_direction/production_training.json
-[INFO] Running training script...
-[INFO] Command: python3 ed_training.py  --input_json /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/electron_direction/production_training.json
-
-
-======================================================================
-MAIN TRACK IDENTIFIER TRAINING
-======================================================================
-
-✓ GPU is available: 1 device(s)
-  GPU 0: /physical_device:GPU:0
-
-Loading configuration from: /afs/cern.ch/work/e/evilla/private/dune/ml_for_pointing/json/electron_direction/production_training.json
-Configuration loaded successfully
-
-Output directory: /eos/user/e/evilla/dune/sn-tps/neural_networks/mt_identifier/hyperopt_simple_cnn/plane_X/20251105_000321
-Configuration saved to: /eos/user/e/evilla/dune/sn-tps/neural_networks/mt_identifier/hyperopt_simple_cnn/plane_X/20251105_000321/config.json
-Arguments saved to: /eos/user/e/evilla/dune/sn-tps/neural_networks/mt_identifier/hyperopt_simple_cnn/plane_X/20251105_000321/args.json
-Selected model: hyperopt_simple_cnn
-
-======================================================================
-STEP 1: DATA PREPARATION
-======================================================================
-
-============================================================
-LOADING DATA FROM NPZ FILES (REGRESSION)
-============================================================
-Data directory: /eos/home-e/evilla/dune/sn-tps/images_test
-Plane: X
-Max samples: All
-Found 1 batch file(s) for plane X (pattern: clusters_planeX_batch*.npz)
-Loading clusters_planeX_batch0000.npz... loaded 331 samples (total: 331)
-
-Total loaded: 331 samples from plane X
-Image shape: (331, 128, 16)
-Metadata shape: (331, 11)
-Dataset shape: (331, 128, 16)
-Direction labels shape: (331, 3)
-Direction labels range: [0.000, 0.000]
-
-Data split:
-  Train: 231 samples, labels shape: (231, 3)
-  Val: 49 samples, labels shape: (49, 3)
-  Test: 51 samples, labels shape: (51, 3)
-
-======================================================================
-STEP 2: MODEL TRAINING
-======================================================================
-Running the hyperparameter search...
-  0%|          | 0/10 [00:00<?, ?trial/s, best loss=?]                                                      (12,)
- 20%|██        | 2/10 [00:00<00:00, 349.92trial/s, best loss: 9999]                                                                   Epoch 1/200
-
- 20%|██        | 2/10 [00:01<00:04,  1.62trial/s, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m25s[0m 4s/step - accuracy: 0.7812 - loss: 51.7416
- 20%|██        | 2/10 [00:04<00:19,  2.45s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 176ms/step - accuracy: 0.6942 - loss: 39.8082
- 20%|██        | 2/10 [00:06<00:24,  3.07s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m6s[0m 269ms/step - accuracy: 0.6863 - loss: 38.2623 - val_accuracy: 0.6531 - val_loss: 8.5722
-
- 20%|██        | 2/10 [00:06<00:27,  3.40s/trial, best loss: 9999]                                                                  Epoch 2/200
-
- 20%|██        | 2/10 [00:06<00:27,  3.40s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 43ms/step - accuracy: 0.4062 - loss: 5.9881
- 20%|██        | 2/10 [00:06<00:27,  3.42s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.5994 - loss: 5.6363 - val_accuracy: 0.2245 - val_loss: 6.4165
-
- 20%|██        | 2/10 [00:06<00:27,  3.44s/trial, best loss: 9999]                                                                  Epoch 3/200
-
- 20%|██        | 2/10 [00:06<00:27,  3.44s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.2500 - loss: 2.3303
- 20%|██        | 2/10 [00:06<00:27,  3.47s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.2432 - loss: 3.4624 - val_accuracy: 0.4286 - val_loss: 5.9440
-
- 20%|██        | 2/10 [00:06<00:27,  3.49s/trial, best loss: 9999]                                                                  Epoch 4/200
-
- 20%|██        | 2/10 [00:06<00:27,  3.49s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 42ms/step - accuracy: 0.4375 - loss: 1.3488
- 20%|██        | 2/10 [00:07<00:28,  3.51s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.4128 - loss: 1.7691 - val_accuracy: 0.1224 - val_loss: 4.4883
-
- 20%|██        | 2/10 [00:07<00:28,  3.54s/trial, best loss: 9999]                                                                  Epoch 5/200
-
- 20%|██        | 2/10 [00:07<00:28,  3.54s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.1250 - loss: 0.4902
- 20%|██        | 2/10 [00:07<00:28,  3.56s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.1933 - loss: 1.4637 - val_accuracy: 0.5306 - val_loss: 3.6708
-
- 20%|██        | 2/10 [00:07<00:28,  3.59s/trial, best loss: 9999]                                                                  Epoch 6/200
-
- 20%|██        | 2/10 [00:07<00:28,  3.59s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.3125 - loss: 0.5371
- 20%|██        | 2/10 [00:07<00:28,  3.61s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.3559 - loss: 0.4041 - val_accuracy: 0.5306 - val_loss: 3.0860
-
- 20%|██        | 2/10 [00:07<00:29,  3.64s/trial, best loss: 9999]                                                                  Epoch 7/200
-
- 20%|██        | 2/10 [00:07<00:29,  3.64s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.3125 - loss: 0.3455
- 20%|██        | 2/10 [00:07<00:29,  3.66s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.4075 - loss: 0.3406 - val_accuracy: 0.3469 - val_loss: 2.6656
-
- 20%|██        | 2/10 [00:07<00:29,  3.68s/trial, best loss: 9999]                                                                  Epoch 8/200
-
- 20%|██        | 2/10 [00:07<00:29,  3.68s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.4688 - loss: 0.2059
- 20%|██        | 2/10 [00:07<00:29,  3.70s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.4438 - loss: 0.1792 - val_accuracy: 0.3469 - val_loss: 2.3711
-
- 20%|██        | 2/10 [00:07<00:29,  3.73s/trial, best loss: 9999]                                                                  Epoch 9/200
-
- 20%|██        | 2/10 [00:07<00:29,  3.73s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.4688 - loss: 0.1489
- 20%|██        | 2/10 [00:07<00:29,  3.75s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 23ms/step - accuracy: 0.4181 - loss: 0.1174 - val_accuracy: 0.3265 - val_loss: 2.1787
-
- 20%|██        | 2/10 [00:07<00:30,  3.83s/trial, best loss: 9999]                                                                  Epoch 10/200
-
- 20%|██        | 2/10 [00:07<00:30,  3.83s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.4375 - loss: 0.1280
- 20%|██        | 2/10 [00:07<00:30,  3.85s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.2610 - loss: 0.0983 - val_accuracy: 0.1020 - val_loss: 2.1825
-
- 20%|██        | 2/10 [00:07<00:31,  3.88s/trial, best loss: 9999]                                                                  Epoch 11/200
-
- 20%|██        | 2/10 [00:07<00:31,  3.88s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.2188 - loss: 0.0825
- 20%|██        | 2/10 [00:07<00:31,  3.90s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1427 - loss: 0.0692 - val_accuracy: 0.0816 - val_loss: 2.1345
-
- 20%|██        | 2/10 [00:07<00:31,  3.93s/trial, best loss: 9999]                                                                  Epoch 12/200
-
- 20%|██        | 2/10 [00:07<00:31,  3.93s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.1875 - loss: 0.0767
- 20%|██        | 2/10 [00:07<00:31,  3.95s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1365 - loss: 0.0600 - val_accuracy: 0.1020 - val_loss: 2.1404
-
- 20%|██        | 2/10 [00:07<00:31,  3.97s/trial, best loss: 9999]                                                                  Epoch 13/200
-
- 20%|██        | 2/10 [00:07<00:31,  3.97s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.1875 - loss: 0.0551
- 20%|██        | 2/10 [00:07<00:31,  3.99s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1812 - loss: 0.0479 - val_accuracy: 0.1224 - val_loss: 2.0790
-
- 20%|██        | 2/10 [00:08<00:32,  4.02s/trial, best loss: 9999]                                                                  Epoch 14/200
-
- 20%|██        | 2/10 [00:08<00:32,  4.02s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 41ms/step - accuracy: 0.1562 - loss: 0.0564
- 20%|██        | 2/10 [00:08<00:32,  4.04s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1094 - loss: 0.0447 - val_accuracy: 0.1224 - val_loss: 2.0870
-
- 20%|██        | 2/10 [00:08<00:32,  4.06s/trial, best loss: 9999]                                                                  Epoch 15/200
-
- 20%|██        | 2/10 [00:08<00:32,  4.06s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 41ms/step - accuracy: 0.2188 - loss: 0.0445
- 20%|██        | 2/10 [00:08<00:32,  4.09s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1340 - loss: 0.0374 - val_accuracy: 0.1020 - val_loss: 2.0289
-
- 20%|██        | 2/10 [00:08<00:32,  4.11s/trial, best loss: 9999]                                                                  Epoch 16/200
-
- 20%|██        | 2/10 [00:08<00:32,  4.11s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 38ms/step - accuracy: 0.1875 - loss: 0.0465
- 20%|██        | 2/10 [00:08<00:33,  4.13s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.1363 - loss: 0.0365 - val_accuracy: 0.1224 - val_loss: 2.0375
-
- 20%|██        | 2/10 [00:08<00:33,  4.16s/trial, best loss: 9999]                                                                  Epoch 17/200
-
- 20%|██        | 2/10 [00:08<00:33,  4.16s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 41ms/step - accuracy: 0.2188 - loss: 0.0380
- 20%|██        | 2/10 [00:08<00:33,  4.18s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.1784 - loss: 0.0318 - val_accuracy: 0.1020 - val_loss: 1.9297
-
- 20%|██        | 2/10 [00:08<00:33,  4.21s/trial, best loss: 9999]                                                                  Epoch 18/200
-
- 20%|██        | 2/10 [00:08<00:33,  4.21s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.1562 - loss: 0.0419
- 20%|██        | 2/10 [00:08<00:33,  4.23s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.1862 - loss: 0.0308 - val_accuracy: 0.1224 - val_loss: 1.9758
-
- 20%|██        | 2/10 [00:08<00:34,  4.25s/trial, best loss: 9999]                                                                  Epoch 19/200
-
- 20%|██        | 2/10 [00:08<00:34,  4.25s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 43ms/step - accuracy: 0.2188 - loss: 0.0374
- 20%|██        | 2/10 [00:08<00:34,  4.28s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1352 - loss: 0.0276 - val_accuracy: 0.1020 - val_loss: 1.8823
-
- 20%|██        | 2/10 [00:08<00:34,  4.30s/trial, best loss: 9999]                                                                  Epoch 20/200
-
- 20%|██        | 2/10 [00:08<00:34,  4.30s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.1875 - loss: 0.0379
- 20%|██        | 2/10 [00:08<00:34,  4.32s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1301 - loss: 0.0274 - val_accuracy: 0.3673 - val_loss: 1.9255
-
- 20%|██        | 2/10 [00:08<00:34,  4.35s/trial, best loss: 9999]                                                                  Epoch 21/200
-
- 20%|██        | 2/10 [00:08<00:34,  4.35s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 41ms/step - accuracy: 0.5312 - loss: 0.0353
- 20%|██        | 2/10 [00:08<00:34,  4.37s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.2416 - loss: 0.0262 - val_accuracy: 0.0816 - val_loss: 1.8477
-
- 20%|██        | 2/10 [00:08<00:35,  4.40s/trial, best loss: 9999]                                                                  Epoch 22/200
-
- 20%|██        | 2/10 [00:08<00:35,  4.40s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 43ms/step - accuracy: 0.1562 - loss: 0.0339
- 20%|██        | 2/10 [00:08<00:35,  4.42s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.2200 - loss: 0.0251 - val_accuracy: 0.8367 - val_loss: 1.9350
-
- 20%|██        | 2/10 [00:08<00:35,  4.44s/trial, best loss: 9999]                                                                  Epoch 23/200
-
- 20%|██        | 2/10 [00:08<00:35,  4.44s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 43ms/step - accuracy: 0.6562 - loss: 0.0332
- 20%|██        | 2/10 [00:08<00:35,  4.47s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.4243 - loss: 0.0247 - val_accuracy: 0.1020 - val_loss: 1.8090
-
- 20%|██        | 2/10 [00:08<00:35,  4.49s/trial, best loss: 9999]                                                                  Epoch 24/200
-
- 20%|██        | 2/10 [00:08<00:35,  4.49s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.0938 - loss: 0.0432
- 20%|██        | 2/10 [00:09<00:36,  4.51s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.0958 - loss: 0.0282 - val_accuracy: 0.4082 - val_loss: 1.8452
-
- 20%|██        | 2/10 [00:09<00:36,  4.54s/trial, best loss: 9999]                                                                  Epoch 25/200
-
- 20%|██        | 2/10 [00:09<00:36,  4.54s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 43ms/step - accuracy: 0.5000 - loss: 0.0519
- 20%|██        | 2/10 [00:09<00:36,  4.56s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.2928 - loss: 0.0296 - val_accuracy: 0.1224 - val_loss: 1.7563
-
- 20%|██        | 2/10 [00:09<00:36,  4.59s/trial, best loss: 9999]                                                                  Epoch 26/200
-
- 20%|██        | 2/10 [00:09<00:36,  4.59s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.1250 - loss: 0.0422
- 20%|██        | 2/10 [00:09<00:36,  4.61s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1376 - loss: 0.0276 - val_accuracy: 0.8367 - val_loss: 1.8080
-
- 20%|██        | 2/10 [00:09<00:37,  4.64s/trial, best loss: 9999]                                                                  Epoch 27/200
-
- 20%|██        | 2/10 [00:09<00:37,  4.64s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.6875 - loss: 0.0363
- 20%|██        | 2/10 [00:09<00:37,  4.66s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.4375 - loss: 0.0232 - val_accuracy: 0.1020 - val_loss: 1.6962
-
- 20%|██        | 2/10 [00:09<00:37,  4.68s/trial, best loss: 9999]                                                                  Epoch 28/200
-
- 20%|██        | 2/10 [00:09<00:37,  4.68s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.0625 - loss: 0.0284
- 20%|██        | 2/10 [00:09<00:37,  4.70s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.0898 - loss: 0.0213 - val_accuracy: 0.1633 - val_loss: 1.7498
-
- 20%|██        | 2/10 [00:09<00:37,  4.73s/trial, best loss: 9999]                                                                  Epoch 29/200
-
- 20%|██        | 2/10 [00:09<00:37,  4.73s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 42ms/step - accuracy: 0.2188 - loss: 0.0269
- 20%|██        | 2/10 [00:09<00:37,  4.75s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.2148 - loss: 0.0219 - val_accuracy: 0.1224 - val_loss: 1.6488
-
- 20%|██        | 2/10 [00:09<00:38,  4.78s/trial, best loss: 9999]                                                                  Epoch 30/200
-
- 20%|██        | 2/10 [00:09<00:38,  4.78s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.1250 - loss: 0.0242
- 20%|██        | 2/10 [00:09<00:38,  4.80s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.1409 - loss: 0.0200 - val_accuracy: 0.1429 - val_loss: 1.7088
-
- 20%|██        | 2/10 [00:09<00:38,  4.82s/trial, best loss: 9999]                                                                  Epoch 31/200
-
- 20%|██        | 2/10 [00:09<00:38,  4.82s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 43ms/step - accuracy: 0.2188 - loss: 0.0205
- 20%|██        | 2/10 [00:09<00:38,  4.85s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.1318 - loss: 0.0179 - val_accuracy: 0.1633 - val_loss: 1.6338
-
- 20%|██        | 2/10 [00:09<00:38,  4.87s/trial, best loss: 9999]                                                                  Epoch 32/200
-
- 20%|██        | 2/10 [00:09<00:38,  4.87s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 41ms/step - accuracy: 0.1875 - loss: 0.0201
- 20%|██        | 2/10 [00:09<00:39,  4.89s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1293 - loss: 0.0136 - val_accuracy: 0.5918 - val_loss: 1.6910
-
- 20%|██        | 2/10 [00:09<00:39,  4.92s/trial, best loss: 9999]                                                                  Epoch 33/200
-
- 20%|██        | 2/10 [00:09<00:39,  4.92s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 42ms/step - accuracy: 0.3750 - loss: 0.0146
- 20%|██        | 2/10 [00:09<00:39,  4.94s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.3980 - loss: 0.0106 - val_accuracy: 0.5918 - val_loss: 1.6519
-
- 20%|██        | 2/10 [00:09<00:39,  4.97s/trial, best loss: 9999]                                                                  Epoch 34/200
-
- 20%|██        | 2/10 [00:09<00:39,  4.97s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.3438 - loss: 0.0130
- 20%|██        | 2/10 [00:09<00:39,  4.99s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.3630 - loss: 0.0093 - val_accuracy: 0.5918 - val_loss: 1.6504
-
- 20%|██        | 2/10 [00:10<00:40,  5.01s/trial, best loss: 9999]                                                                  Epoch 35/200
-
- 20%|██        | 2/10 [00:10<00:40,  5.01s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 43ms/step - accuracy: 0.4062 - loss: 0.0122
- 20%|██        | 2/10 [00:10<00:40,  5.04s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.3915 - loss: 0.0087 - val_accuracy: 0.5918 - val_loss: 1.6506
-
- 20%|██        | 2/10 [00:10<00:40,  5.06s/trial, best loss: 9999]                                                                  Epoch 36/200
-
- 20%|██        | 2/10 [00:10<00:40,  5.06s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 42ms/step - accuracy: 0.3438 - loss: 0.0112
- 20%|██        | 2/10 [00:10<00:40,  5.08s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.3815 - loss: 0.0081 - val_accuracy: 0.5918 - val_loss: 1.6541
-
- 20%|██        | 2/10 [00:10<00:40,  5.11s/trial, best loss: 9999]                                                                  Epoch 37/200
-
- 20%|██        | 2/10 [00:10<00:40,  5.11s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 38ms/step - accuracy: 0.3750 - loss: 0.0107
- 20%|██        | 2/10 [00:10<00:41,  5.13s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.3928 - loss: 0.0077 - val_accuracy: 0.5918 - val_loss: 1.6521
-
- 20%|██        | 2/10 [00:10<00:41,  5.15s/trial, best loss: 9999]                                                                  Epoch 38/200
-
- 20%|██        | 2/10 [00:10<00:41,  5.15s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.4062 - loss: 0.0102
- 20%|██        | 2/10 [00:10<00:41,  5.17s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.4072 - loss: 0.0073 - val_accuracy: 0.5918 - val_loss: 1.6522
-
- 20%|██        | 2/10 [00:10<00:41,  5.20s/trial, best loss: 9999]                                                                  Epoch 39/200
-
- 20%|██        | 2/10 [00:10<00:41,  5.20s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.3750 - loss: 0.0097
- 20%|██        | 2/10 [00:10<00:41,  5.22s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.4020 - loss: 0.0070 - val_accuracy: 0.5918 - val_loss: 1.6475
-
- 20%|██        | 2/10 [00:10<00:41,  5.25s/trial, best loss: 9999]                                                                  Epoch 40/200
-
- 20%|██        | 2/10 [00:10<00:41,  5.25s/trial, best loss: 9999]                                                                  [1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.3438 - loss: 0.0094
- 20%|██        | 2/10 [00:10<00:42,  5.27s/trial, best loss: 9999]                                                                  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.3773 - loss: 0.0067 - val_accuracy: 0.5918 - val_loss: 1.6502
-
- 20%|██        | 2/10 [00:10<00:42,  5.29s/trial, best loss: 9999]                                                                  Epoch 40: early stopping
-
- 20%|██        | 2/10 [00:10<00:42,  5.29s/trial, best loss: 9999]                                                                  [1m1/2[0m [32m━━━━━━━━━━[0m[37m━━━━━━━━━━[0m [1m0s[0m 26ms/step - accuracy: 0.6250 - loss: 2.4407
- 20%|██        | 2/10 [00:10<00:42,  5.33s/trial, best loss: 9999]                                                                  [1m2/2[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 3ms/step - accuracy: 0.6029 - loss: 1.9137 
-
- 20%|██        | 2/10 [00:10<00:42,  5.33s/trial, best loss: 9999]                                                                  loss: 
- 20%|██        | 2/10 [00:10<00:42,  5.34s/trial, best loss: 9999]                                                                  1.6502399444580078
- 20%|██        | 2/10 [00:10<00:42,  5.34s/trial, best loss: 9999]                                                                   accuracy: 
- 20%|██        | 2/10 [00:10<00:42,  5.34s/trial, best loss: 9999]                                                                  0.5918367505073547
- 20%|██        | 2/10 [00:10<00:42,  5.34s/trial, best loss: 9999] 30%|███       | 3/10 [00:10<00:24,  3.56s/trial, best loss: 1.6502399444580078]100%|██████████| 10/10 [00:10<00:00,  1.07s/trial, best loss: 1.6502399444580078]
-Hyperparameter search completed.
-Best parameters:  {'n_conv_layers': 2, 'n_dense_layers': 4, 'n_filters': 32, 'kernel_size': 3, 'n_dense_units': 128, 'learning_rate': 0.0004409677261786732, 'decay_rate': 0.91318705565447}
-Best loss:  -1.6502399444580078
-Best parameters saved.
-Saving the trials...
-Trials saved.
-Saving the best parameters...
-Best parameters saved.
-Saving the best model...
-Epoch 1/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m16s[0m 2s/step - accuracy: 0.0000e+00 - loss: 202.5260[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 133ms/step - accuracy: 0.0162 - loss: 120.1599  [1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m4s[0m 195ms/step - accuracy: 0.0163 - loss: 114.0779 - val_accuracy: 0.0408 - val_loss: 7.8628
-Epoch 2/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 42ms/step - accuracy: 0.0625 - loss: 8.3327[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.3354 - loss: 9.5100 - val_accuracy: 0.7347 - val_loss: 4.2726
-Epoch 3/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.5938 - loss: 2.1412[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.5153 - loss: 1.5588 - val_accuracy: 0.0408 - val_loss: 2.9576
-Epoch 4/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.0000e+00 - loss: 1.6021[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.0510 - loss: 1.0271 - val_accuracy: 0.0408 - val_loss: 2.4088
-Epoch 5/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.0312 - loss: 0.8878[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1571 - loss: 0.5672 - val_accuracy: 0.3265 - val_loss: 2.0048
-Epoch 6/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 38ms/step - accuracy: 0.4375 - loss: 0.5392[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.4718 - loss: 0.3551 - val_accuracy: 0.2857 - val_loss: 1.8520
-Epoch 7/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.4062 - loss: 0.4330[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.4370 - loss: 0.2578 - val_accuracy: 0.3061 - val_loss: 1.8045
-Epoch 8/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 38ms/step - accuracy: 0.4375 - loss: 0.2508[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.3661 - loss: 0.1761 - val_accuracy: 0.4898 - val_loss: 1.6447
-Epoch 9/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.3125 - loss: 0.2183[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.6133 - loss: 0.1421 - val_accuracy: 0.7551 - val_loss: 1.6277
-Epoch 10/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.5938 - loss: 0.1458[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.6331 - loss: 0.1048 - val_accuracy: 0.5102 - val_loss: 1.6057
-Epoch 11/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 41ms/step - accuracy: 0.3125 - loss: 0.1088[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.4086 - loss: 0.0882 - val_accuracy: 0.4898 - val_loss: 1.6090
-Epoch 12/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 42ms/step - accuracy: 0.3438 - loss: 0.1030[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.2683 - loss: 0.0807 - val_accuracy: 0.4694 - val_loss: 1.5796
-Epoch 13/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 42ms/step - accuracy: 0.2188 - loss: 0.0999[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.4810 - loss: 0.0738 - val_accuracy: 0.7347 - val_loss: 1.5949
-Epoch 14/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 38ms/step - accuracy: 0.6562 - loss: 0.0774[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.6571 - loss: 0.0596 - val_accuracy: 0.4694 - val_loss: 1.5461
-Epoch 15/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 38ms/step - accuracy: 0.2812 - loss: 0.0771[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.4743 - loss: 0.0553 - val_accuracy: 0.7551 - val_loss: 1.5895
-Epoch 16/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 38ms/step - accuracy: 0.5938 - loss: 0.0601[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.6798 - loss: 0.0463 - val_accuracy: 0.4694 - val_loss: 1.5870
-Epoch 17/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.2500 - loss: 0.0559[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.4963 - loss: 0.0419 - val_accuracy: 0.7347 - val_loss: 1.6016
-Epoch 18/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 42ms/step - accuracy: 0.5625 - loss: 0.0672[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.6058 - loss: 0.0435 - val_accuracy: 0.7143 - val_loss: 1.5405
-Epoch 19/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.5625 - loss: 0.1166[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.6770 - loss: 0.0573 - val_accuracy: 0.4694 - val_loss: 1.5555
-Epoch 20/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.2500 - loss: 0.2215[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.3478 - loss: 0.0892 - val_accuracy: 0.6939 - val_loss: 1.4935
-Epoch 21/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 38ms/step - accuracy: 0.5625 - loss: 0.3025[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.6608 - loss: 0.1146 - val_accuracy: 0.4694 - val_loss: 1.4963
-Epoch 22/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 38ms/step - accuracy: 0.2812 - loss: 0.1336[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.2144 - loss: 0.0597 - val_accuracy: 0.6939 - val_loss: 1.4946
-Epoch 23/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 38ms/step - accuracy: 0.5312 - loss: 0.0632[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.6245 - loss: 0.0364 - val_accuracy: 0.4490 - val_loss: 1.5138
-Epoch 24/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.3125 - loss: 0.0304[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.2765 - loss: 0.0259 - val_accuracy: 0.6939 - val_loss: 1.4969
-Epoch 25/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.5625 - loss: 0.0300[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.6870 - loss: 0.0269 - val_accuracy: 0.6939 - val_loss: 1.4648
-Epoch 26/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.5938 - loss: 0.0263[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.3108 - loss: 0.0204 - val_accuracy: 0.6735 - val_loss: 1.4487
-Epoch 27/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 42ms/step - accuracy: 0.5312 - loss: 0.0207[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.6667 - loss: 0.0181 - val_accuracy: 0.4490 - val_loss: 1.4144
-Epoch 28/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 38ms/step - accuracy: 0.3438 - loss: 0.0190[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1684 - loss: 0.0169 - val_accuracy: 0.6735 - val_loss: 1.3881
-Epoch 29/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 41ms/step - accuracy: 0.5625 - loss: 0.0174[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.5676 - loss: 0.0169 - val_accuracy: 0.0204 - val_loss: 1.3541
-Epoch 30/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.1562 - loss: 0.0176[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1099 - loss: 0.0158 - val_accuracy: 0.6735 - val_loss: 1.3496
-Epoch 31/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.5625 - loss: 0.0165[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 20ms/step - accuracy: 0.6915 - loss: 0.0170 - val_accuracy: 0.4490 - val_loss: 1.3481
-Epoch 32/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.3125 - loss: 0.0182[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1477 - loss: 0.0165 - val_accuracy: 0.2449 - val_loss: 1.3374
-Epoch 33/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 45ms/step - accuracy: 0.3438 - loss: 0.0170[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.5956 - loss: 0.0164 - val_accuracy: 0.4490 - val_loss: 1.3609
-Epoch 34/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 42ms/step - accuracy: 0.2812 - loss: 0.0183[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.2061 - loss: 0.0166 - val_accuracy: 0.6735 - val_loss: 1.3500
-Epoch 35/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 42ms/step - accuracy: 0.5625 - loss: 0.0151[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.6827 - loss: 0.0159 - val_accuracy: 0.4490 - val_loss: 1.3425
-Epoch 36/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.3125 - loss: 0.0157[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1581 - loss: 0.0130 - val_accuracy: 0.2653 - val_loss: 1.3169
-Epoch 37/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 38ms/step - accuracy: 0.4062 - loss: 0.0136[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.5884 - loss: 0.0116 - val_accuracy: 0.0204 - val_loss: 1.3083
-Epoch 38/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 43ms/step - accuracy: 0.1875 - loss: 0.0113[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1252 - loss: 0.0110 - val_accuracy: 0.2653 - val_loss: 1.2783
-Epoch 39/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.4062 - loss: 0.0115[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.5144 - loss: 0.0135 - val_accuracy: 0.0204 - val_loss: 1.3344
-Epoch 40/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 38ms/step - accuracy: 0.2500 - loss: 0.0118[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.1331 - loss: 0.0119 - val_accuracy: 0.6939 - val_loss: 1.3392
-Epoch 41/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.6250 - loss: 0.0104[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.7115 - loss: 0.0101 - val_accuracy: 0.0204 - val_loss: 1.3608
-Epoch 42/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 41ms/step - accuracy: 0.1875 - loss: 0.0162[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.1383 - loss: 0.0109 - val_accuracy: 0.2653 - val_loss: 1.3461
-Epoch 43/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.4375 - loss: 0.0213[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 8ms/step - accuracy: 0.5168 - loss: 0.0128 - val_accuracy: 0.0204 - val_loss: 1.3560
-Epoch 44/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 40ms/step - accuracy: 0.2188 - loss: 0.0103[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1353 - loss: 0.0083 - val_accuracy: 0.0204 - val_loss: 1.3453
-Epoch 45/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.2500 - loss: 0.0069[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.3442 - loss: 0.0067 - val_accuracy: 0.0204 - val_loss: 1.3552
-Epoch 46/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 39ms/step - accuracy: 0.1875 - loss: 0.0085[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1574 - loss: 0.0069 - val_accuracy: 0.0408 - val_loss: 1.3465
-Epoch 47/200
-[1m1/8[0m [32m━━[0m[37m━━━━━━━━━━━━━━━━━━[0m [1m0s[0m 41ms/step - accuracy: 0.2812 - loss: 0.0069[1m8/8[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 7ms/step - accuracy: 0.1920 - loss: 0.0064 - val_accuracy: 0.0204 - val_loss: 1.3577
-Epoch 47: early stopping
-Model built.
-Plotting the hyperparameter search...
-Plot saved.
-
-✓ Model training completed
-
-======================================================================
-STEP 3: SAVING MODEL
-======================================================================
-✓ Model saved to: /eos/user/e/evilla/dune/sn-tps/neural_networks/mt_identifier/hyperopt_simple_cnn/plane_X/20251105_000321/hyperopt_simple_cnn.h5
-✓ Training history saved
-
-======================================================================
-STEP 4: MODEL EVALUATION
-======================================================================
-Doing some test...
-[1m1/2[0m [32m━━━━━━━━━━[0m[37m━━━━━━━━━━[0m [1m0s[0m 512ms/step[1m2/2[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 266ms/step[1m2/2[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 266ms/step
-Calculating metrics...
-
-
-✗ Error during training: too many values to unpack (expected 2)

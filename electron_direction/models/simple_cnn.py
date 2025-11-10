@@ -14,7 +14,7 @@ import general_purpose_libs as gpl
 import regression_libs as rl
 
 
-def build_model(n_outputs, optimizable_parameters, train, validation, output_folder, input_shape, loss_function='mean_squared_error', epochs=200, batch_size=32):
+def build_model(n_outputs, optimizable_parameters, train, validation, output_folder, input_shape, loss_function='mean_squared_error'):
     
     model = tf.keras.Sequential()
     model.add(tf.keras.layers.Conv2D(optimizable_parameters['n_filters'], (optimizable_parameters['kernel_size'], 1), activation='relu', input_shape=input_shape))
@@ -49,9 +49,9 @@ def build_model(n_outputs, optimizable_parameters, train, validation, output_fol
             verbose=1)
     ]    
 
-    history = model.fit(train[0], train[1], 
+    history = model.fit(train, 
                         epochs=200, 
-                        validation_data=(validation[0], validation[1]), 
+                        validation_data=validation, 
                         callbacks=callbacks,
                         verbose=1)
 
@@ -69,7 +69,7 @@ def create_and_train_model(n_outputs, model_parameters, train, validation, outpu
 
     input_shape = model_parameters['input_shape']
     build_parameters = model_parameters['build_parameters'] 
-    model, history = build_model(n_outputs, build_parameters, train, validation, output_folder, input_shape, loss_function=loss_function, epochs=model_parameters.get("epochs", 200), batch_size=model_parameters.get("batch_size", 32))
+    model, history = build_model(n_outputs, build_parameters, train, validation, output_folder, input_shape, loss_function=loss_function)
 
     return model, history
 

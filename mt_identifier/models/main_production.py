@@ -332,14 +332,29 @@ def main():
     
     train_img, train_label = train
     val_img, val_label = val
-    test_img, test_label = test
+    test_img, test_label, test_metadata = test
     
     # Build model
     print("\n" + "="*60)
     print("BUILDING MODEL")
     print("="*60)
     
-    model = model_module.build_model(config['model_parameters'])
+    # Get input shape from train data
+    input_shape = train_img.shape[1:]
+    
+    # Get epochs and batch_size from config
+    epochs = config['model_parameters'].get('epochs', 200)
+    batch_size = config['model_parameters'].get('batch_size', 32)
+    
+    model = model_module.build_model(
+        config['model_parameters'],
+        train,
+        val,
+        output_dir,
+        input_shape,
+        epochs=epochs,
+        batch_size=batch_size
+    )
     model.summary()
     
     # Train model

@@ -701,7 +701,7 @@ def prepare_data_from_multiple_npz(data_dirs, plane, dataset_parameters, output_
     
     # Save sample images
     print("\nSaving sample images...")
-    save_sample_images(train_img, train_label, output_folder, n_samples=10)
+    #     save_sample_img(train_img, train_label, output_folder, n_samples=10)
     
     # Initialize history dictionary for saving performance metrics
     history_dict = {

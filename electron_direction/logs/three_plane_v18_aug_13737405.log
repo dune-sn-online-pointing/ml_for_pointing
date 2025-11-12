@@ -1,0 +1,21 @@
+000 (13737405.000.000) 11/12 11:23:12 Job submitted from host: <188.184.90.62:9618?addrs=188.184.90.62-9618+[2001-1458-201-e4--100-238]-9618&alias=bigbird16.cern.ch&noUDP&sock=schedd_2089_756e>
+...
+040 (13737405.000.000) 11/12 11:26:46 Started transferring input files
+	Transferring to host: <188.185.190.108:9618?addrs=188.185.190.108-9618+[2001-1458-d03-b--100-2ff]-9618&alias=b9pgpun015.cern.ch&noUDP&sock=slot1_4_17166_bff3_4876>
+...
+040 (13737405.000.000) 11/12 11:26:47 Finished transferring input files
+...
+001 (13737405.000.000) 11/12 11:26:48 Job executing on host: <188.185.190.108:9618?addrs=188.185.190.108-9618+[2001-1458-d03-b--100-2ff]-9618&alias=b9pgpun015.cern.ch&noUDP&sock=startd_16497_25f7>
+	SlotName: slot1_4@b9pgpun015.cern.ch
+	AvailableGPUs = { GPUs_GPU_6c758778 }
+	CondorScratchDir = "/pool/condor/dir_3933553"
+	Cpus = 6
+	Disk = 10491960
+	GPUs = 1
+	GPUs_GPU_6c758778 = [ Id = "GPU-6c758778"; ClockMhz = 1785.0; Capability = 9.0; CoresPerCU = 128; DeviceName = "NVIDIA H100 NVL"; DeviceUuid = "6c758778-f190-832d-194b-c3fac08a8c33"; ECCEnabled = true; ComputeUnits = 132; DriverVersion = 13.0; DevicePciBusId = "0000:AE:00.0"; GlobalMemoryMb = 95320; MaxSupportedVersion = 13000 ]
+	Memory = 18000
+...
+006 (13737405.000.000) 11/12 11:27:01 Image size of job updated: 161540
+	158  -  MemoryUsage of job (MB)
+	161540  -  ResidentSetSize of job (KB)
+...

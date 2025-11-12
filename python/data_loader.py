@@ -4,6 +4,7 @@ Handles loading NPZ files with images and metadata
 """
 
 import numpy as np
+import warnings
 from pathlib import Path
 from typing import Tuple, List, Dict, Optional, Sequence, Union
 
@@ -173,7 +174,21 @@ def load_dataset_from_directory(
         if verbose:
             print(f"Loading {batch_file.name}...", end=' ')
         
+        # Skip corrupted/empty files
+        if batch_file.stat().st_size == 0:
+            warnings.warn(f"Skipping corrupted file (0 bytes): {batch_file}")
+            continue
+        
         images, metadata = load_npz_batch(str(batch_file))
+        
+        # Filter: Skip files with wrong dimensions (e.g., 128x16 when we expect 128x32)
+        # This prevents mixing nov10 (128x16) and nov11 (128x32) data
+        if len(all_images) > 0:
+            expected_shape = all_images[0].shape[1:]  # (H, W) from first batch
+            if images.shape[1:] != expected_shape:
+                if verbose:
+                    print(f"SKIPPED - dimension mismatch: {images.shape[1:]} != {expected_shape}")
+                continue
         
         # Check if we need to limit samples
         if max_samples is not None:
@@ -467,3 +482,142 @@ def extract_direction_labels(metadata: np.ndarray) -> np.ndarray:
     directions = momentum / norms
     
     return directions
+
+
+def load_three_plane_matched(
+    data_dir: str,
+    max_samples: Optional[int] = None,
+    shuffle: bool = True,
+    verbose: bool = True
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Load 3-plane matched samples where X plane matches to both U and V.
+    
+    Uses match_id in metadata field 13 to match clusters across planes.
+    Only returns samples where all three planes have valid matches (match_id != -1).
+    
+    Args:
+        data_dir: Directory containing *_planeU.npz, *_planeV.npz, *_planeX.npz files
+        max_samples: Maximum number of matched samples to return (None = all)
+        shuffle: Whether to shuffle the data before limiting samples
+        verbose: Print loading progress
+        
+    Returns:
+        Tuple of (images_u, images_v, images_x, metadata):
+            - images_u: (N, 128, 16) U-plane images
+            - images_v: (N, 128, 16) V-plane images  
+            - images_x: (N, 128, 16) X-plane images
+            - metadata: (N, 14) metadata from X plane (contains match info)
+    """
+    from pathlib import Path
+    
+    data_dir = Path(data_dir)
+    
+    if verbose:
+        print(f"Loading 3-plane matched data from: {data_dir}")
+    
+    # Get list of X-plane files
+    x_files = sorted(data_dir.glob("*_planeX.npz"))
+    
+    if len(x_files) == 0:
+        raise ValueError(f"No *_planeX.npz files found in {data_dir}")
+    
+    if verbose:
+        print(f"Found {len(x_files)} X-plane files")
+    
+    all_images_u, all_images_v, all_images_x = [], [], []
+    all_metadata = []
+    total_samples = 0
+    files_processed = 0
+    
+    for x_file in x_files:
+        # Get corresponding U and V files
+        prefix = str(x_file)[:-11]  # Remove "_planeX.npz"
+        u_file = Path(f"{prefix}_planeU.npz")
+        v_file = Path(f"{prefix}_planeV.npz")
+        
+        if not u_file.exists() or not v_file.exists():
+            if verbose:
+                print(f"Warning: Skipping {x_file.name} - missing U or V plane")
+            continue
+        
+        # Load all three planes
+        try:
+            data_u = np.load(u_file)
+            data_v = np.load(v_file)
+            data_x = np.load(x_file)
+            
+            images_u, meta_u = data_u['images'], data_u['metadata']
+            images_v, meta_v = data_v['images'], data_v['metadata']
+            images_x, meta_x = data_x['images'], data_x['metadata']
+            
+            data_u.close()
+            data_v.close()
+            data_x.close()
+        except Exception as e:
+            if verbose:
+                print(f"Warning: Error loading {x_file.name}: {e}")
+            continue
+        
+        # Build matching lookup: (event_id, match_id) -> index
+        # Only include samples with valid match_id (not -1)
+        lookup_u = {(m[0], m[13]): i for i, m in enumerate(meta_u) if m[13] != -1}
+        lookup_v = {(m[0], m[13]): i for i, m in enumerate(meta_v) if m[13] != -1}
+        
+        # For each X sample, find matching U and V
+        for idx_x, meta in enumerate(meta_x):
+            event_id, match_id = meta[0], meta[13]
+            
+            # Skip if not matched
+            if match_id == -1:
+                continue
+            
+            key = (event_id, match_id)
+            
+            # Check if this match exists in both U and V
+            if key in lookup_u and key in lookup_v:
+                idx_u = lookup_u[key]
+                idx_v = lookup_v[key]
+                
+                all_images_u.append(images_u[idx_u])
+                all_images_v.append(images_v[idx_v])
+                all_images_x.append(images_x[idx_x])
+                all_metadata.append(meta)
+                
+                total_samples += 1
+                
+                if max_samples and total_samples >= max_samples:
+                    break
+        
+        files_processed += 1
+        
+        if verbose and files_processed % 100 == 0:
+            print(f"  Processed {files_processed}/{len(x_files)} files, found {total_samples} matched samples")
+        
+        if max_samples and total_samples >= max_samples:
+            break
+    
+    if total_samples == 0:
+        raise ValueError("No 3-plane matched samples found!")
+    
+    if verbose:
+        print(f"\n✓ Loaded {total_samples} 3-plane matched samples from {files_processed} files")
+    
+    # Convert to numpy arrays
+    images_u = np.array(all_images_u, dtype=np.float32)
+    images_v = np.array(all_images_v, dtype=np.float32)
+    images_x = np.array(all_images_x, dtype=np.float32)
+    metadata = np.array(all_metadata, dtype=np.float32)
+    
+    # Shuffle if requested
+    if shuffle:
+        if verbose:
+            print("Shuffling dataset...")
+        indices = np.arange(len(images_u))
+        np.random.shuffle(indices)
+        images_u = images_u[indices]
+        images_v = images_v[indices]
+        images_x = images_x[indices]
+        metadata = metadata[indices]
+    
+    return images_u, images_v, images_x, metadata

@@ -759,3 +759,95 @@ accounting_group = group_u_DUNE.users
 - Memory >16GB significantly reduces matching slots
 
 **Historical data**: All successful ED jobs used 1 CPU + 16GB RAM + any GPU.
+
+### Job Output and Log Management
+
+**CRITICAL**: Store logs in EOS with model outputs, not in the repository.
+
+**Why**:
+- Log files can become very large (10+ MB per job)
+- Clutters git repository and makes it slow
+- Makes it hard to track which logs belong to which training run
+- EOS provides more storage space
+
+**Recommended structure**:
+```
+/eos/user/e/evilla/dune/sn-tps/neural_networks/
+├── channel_tagging/
+│   └── v8_streaming_100k/
+│       ├── model.keras
+│       ├── results.json
+│       ├── training_history.csv
+│       └── logs/                    # HTCondor logs go here
+│           ├── job_13722817.out
+│           ├── job_13722817.err
+│           └── job_13722817.log
+├── mt_identifier/
+│   └── v9_nov11_10k/
+│       ├── model.keras
+│       ├── results.json
+│       └── logs/
+└── electron_direction/
+    └── v18_200k_aug/
+        ├── model.keras
+        ├── results.json
+        └── logs/
+```
+
+**Submission file template** (logs in EOS):
+```bash
+# HTCondor submission script
+executable = path/to/wrapper.sh
+arguments = -j path/to/config.json
+
+# Put logs in EOS with training output
+output = /eos/user/e/evilla/dune/sn-tps/neural_networks/<task>/<version>/logs/job_$(ClusterId).out
+error = /eos/user/e/evilla/dune/sn-tps/neural_networks/<task>/<version>/logs/job_$(ClusterId).err
+log = /eos/user/e/evilla/dune/sn-tps/neural_networks/<task>/<version>/logs/job_$(ClusterId).log
+
+request_cpus = 1
+request_memory = 16GB
++JobFlavour = "tomorrow"
+accounting_group = group_u_DUNE.users
+
+queue
+```
+
+**DO NOT use**:
+- ❌ `training_output/` in repository - Use EOS output directories instead
+- ❌ `*/logs/` in repository - Logs should go to EOS with model outputs
+- ❌ Local repository for any large files (>1MB)
+
+**Creating log directory**:
+```bash
+# Training scripts should create log directory automatically
+OUTPUT_DIR="/eos/user/e/evilla/dune/sn-tps/neural_networks/channel_tagging/v9"
+mkdir -p "$OUTPUT_DIR/logs"
+```
+
+This keeps the repository clean and ensures all outputs (model + logs + results) are together in one EOS location.
+
+### Evaluation and Analysis
+
+**New in training scripts**: Automatic evaluation and plot generation after training.
+
+**What's saved automatically** (for jobs submitted after Nov 12, 2025):
+- `test_predictions.npz`: Predictions, true labels, and particle energies
+- `plots/confusion_matrix.png`: Confusion matrix on test set
+- `plots/roc_curve.png`: ROC curve with AUC score
+- `plots/prediction_distribution.png`: Histogram of predictions by true class
+- `plots/accuracy_vs_energy.png`: **Classification accuracy as function of particle energy**
+- `plots/training_history.png`: Loss and accuracy evolution during training
+
+**Opening plots**:
+```bash
+# View plots from EOS
+eog /eos/user/e/evilla/dune/sn-tps/neural_networks/<task>/<version>/plots/*.png
+
+# Or use code to open in VS Code
+code /eos/user/e/evilla/dune/sn-tps/neural_networks/<task>/<version>/plots/
+```
+
+**Energy-dependent analysis**: The `accuracy_vs_energy.png` plot shows how well the model performs across different particle energies, helping identify if the model struggles with low/high energy events.
+
+**Note**: Jobs submitted before this update (CT v5, v6, etc.) don't have these plots. Future jobs (v8-v11 currently running) will generate them automatically.

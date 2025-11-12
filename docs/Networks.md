@@ -126,6 +126,27 @@ This file tracks successful training runs for each task. Only completed training
 - **Status**: ✅ Completed - **Significantly outperforms v14, scales well with data**
 - **Note**: Directory naming bug - saved as "unknown" instead of "v15_200k" (investigating)
 
+#### v18: Production 200k with Data Augmentation - ✅ COMPLETED
+- **Job ID**: 13737405 (resubmitted with optimized resources)
+- **Config**: `electron_direction/json/three_plane_v18_200k_aug.json`
+- **Output**: `three_plane_three_plane_v18_200k_aug_20251112_114654/`
+- **Dataset**: 200k samples from nov11 (128×32 per plane)
+- **Architecture**: 4 conv layers, 64 filters, batch norm
+- **Loss**: Angular loss
+- **Training**: 35 epochs (early stopping), **data augmentation enabled**
+  - Flip X/Y: 50% probability each
+  - Rotation: ±15°
+  - Zoom: ±10%
+- **Resources**: Optimized (1 CPU + 16GB RAM + any GPU) - **61 matching machines** (vs 0 before)
+- **Results**:
+  - Mean angular error: **47.16°** (same as v15)
+  - Median angular error: **30.61°** (same as v15)
+  - 25th percentile: 15.66°
+  - 75th percentile: 65.89°
+  - Best val loss: 0.8232 (epoch 25)
+- **Status**: ✅ Completed - **Data augmentation doesn't hurt, resource optimization successful**
+- **Note**: Job was idle before resource optimization (removed specific GPU requirements)
+
 ---
 
 ## Channel Tagging (CT) Classification
@@ -197,44 +218,51 @@ This file tracks successful training runs for each task. Only completed training
 - Created incremental dataset refresh strategy
 - Fixed memory issues in streaming implementation
 
-#### v8: Streaming 100k with Batch Norm - ⏳ SUBMITTED
-- **Job ID**: 13722802
+#### v8: Streaming 100k with Batch Norm - ⏳ RUNNING (10h 44m)
+- **Job ID**: 13722817
 - **Config**: `channel_tagging/json/volume_v8_streaming_100k.json`
 - **Data**: 100k balanced (50k ES + 50k CC), streaming mode
 - **Architecture**: 4 conv layers, 64 filters, **batch normalization**
 - **Training**: 100 epochs, patience=20, streaming generator
 - **Resources**: 16GB RAM, CPU only
-- **Status**: ⏳ Just submitted - streaming with proper batch norm
+- **Status**: ⏳ Running on bigbird10 - 10h 44m runtime
 
-#### v9: Incremental Dataset Refresh 150k - ⏳ SUBMITTED
-- **Job ID**: 13722803
-- **Config**: `channel_tagging/json/volume_v9_incremental_150k.json`
-- **Data**: 150k total (75k per class), **incremental loading**
-  - Load 10k samples at a time
-  - Refresh dataset every 5 epochs
-  - Cycle through all 150k samples
+#### v9: Incremental Dataset Refresh 150k - 🔄 RESUBMITTED (2h 17m)
+- **Job ID**: 13737399 (resubmitted after config fix)
+- **Config**: `channel_tagging/json/volume_v9_streaming_150k.json`
+- **Data**: 150k total (75k per class), **streaming mode**
 - **Architecture**: 4 conv layers, 64 filters, batch norm
 - **Training**: 100 epochs, patience=25
 - **Resources**: 12GB RAM
-- **Status**: ⏳ Just submitted - testing incremental refresh strategy
+- **Status**: ⏳ Running - 2h 17m runtime (resubmitted with streaming config)
 
-#### v10: Higher Dropout 100k - ⏳ SUBMITTED
-- **Job ID**: 13722804
+#### v10: Higher Dropout 100k - ⏳ RUNNING (10h 44m)
+- **Job ID**: 13722819
 - **Config**: `channel_tagging/json/volume_v10_dropout_100k.json`
 - **Data**: 100k balanced, streaming mode
 - **Architecture**: 4 conv layers, 64 filters, batch norm, **dropout=0.5** (vs 0.4)
 - **Training**: 100 epochs, patience=20
 - **Resources**: 16GB RAM
-- **Status**: ⏳ Just submitted - testing if higher dropout improves generalization
+- **Status**: ⏳ Running on bigbird10 - 10h 44m runtime
 
-#### v11: Deeper Architecture 100k - ⏳ SUBMITTED
-- **Job ID**: 13722805
+#### v11: Deeper Architecture 100k - ⏳ RUNNING (10h 44m)
+- **Job ID**: 13722820
 - **Config**: `channel_tagging/json/volume_v11_deeper_100k.json`
 - **Data**: 100k balanced, streaming mode
 - **Architecture**: **5 conv layers, 128 filters**, batch norm, 512 dense units
 - **Training**: 100 epochs, patience=20, batch_size=8, lr=0.0003
 - **Resources**: 24GB RAM
-- **Status**: ⏳ Just submitted - testing if deeper network improves feature extraction
+- **Status**: ⏳ Running on bigbird10 - 10h 44m runtime
+
+#### v12: Quick Test 10k - ⏳ RUNNING (just started)
+- **Job ID**: 13737411
+- **Config**: `channel_tagging/json/volume_v12_test_10k.json`
+- **Data**: 10k balanced (5k per class), streaming mode
+- **Architecture**: 4 conv layers, 64 filters, batch norm (same as v8)
+- **Training**: 50 epochs, patience=15, batch_size=16
+- **Resources**: 16GB RAM
+- **Purpose**: Quick test to verify evaluation plots work correctly
+- **Status**: ⏳ Running - just started (2 minutes)
 
 ### Key Technical Solution
 

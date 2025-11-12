@@ -300,14 +300,200 @@ def main():
     )
     
     print(f"\n✓ Training complete!")
-    print(f"✓ Results saved to: {output_dir}")
     
-    # Save final results
+    # Evaluate on test set and save predictions
+    print("\n" + "="*60)
+    print("TEST SET EVALUATION")
+    print("="*60)
+    
+    # Create test dataset
+    test_ds = create_dataset(es_test_files, cc_test_files, batch_size, is_training=False)
+    
+    # Load best model
+    best_model = keras.models.load_model(os.path.join(output_dir, 'best_model.keras'))
+    
+    # Collect predictions and metadata
+    all_predictions = []
+    all_labels = []
+    all_energies = []
+    
+    print("Generating predictions on test set...")
+    for batch_images, batch_labels in test_ds:
+        predictions = best_model.predict(batch_images, verbose=0)
+        all_predictions.extend(predictions[:, 1])  # Probability of ES class
+        all_labels.extend(batch_labels.numpy())
+    
+    # Load metadata from test files to get energies
+    print("Loading test metadata...")
+    for es_file in es_test_files:
+        data = np.load(es_file, allow_pickle=True)
+        for meta in data['metadata']:
+            # Use cluster_energy if available (new format), else particle_energy (old format)
+            if isinstance(meta, dict):
+                # Old volume format: dictionary with keys
+                energy = meta.get('cluster_energy', meta.get('particle_energy', 0))
+            else:
+                # New cluster format: numpy array [event, is_marley, is_main_track, is_es, 
+                #                                  pos(3), mom(3), cluster_energy, particle_energy, plane, match_id]
+                # cluster_energy is at index 10
+                energy = float(meta[10]) if len(meta) > 10 else float(meta[11] if len(meta) > 11 else 0)
+            all_energies.append(energy)
+    
+    for cc_file in cc_test_files:
+        data = np.load(cc_file, allow_pickle=True)
+        for meta in data['metadata']:
+            # Use cluster_energy if available (new format), else particle_energy (old format)
+            if isinstance(meta, dict):
+                # Old volume format: dictionary with keys
+                energy = meta.get('cluster_energy', meta.get('particle_energy', 0))
+            else:
+                # New cluster format: numpy array
+                # cluster_energy is at index 10
+                energy = float(meta[10]) if len(meta) > 10 else float(meta[11] if len(meta) > 11 else 0)
+            all_energies.append(energy)
+    
+    all_predictions = np.array(all_predictions[:len(all_energies)])
+    all_labels = np.array(all_labels[:len(all_energies)])
+    all_energies = np.array(all_energies)
+    
+    # Save predictions
+    predictions_file = os.path.join(output_dir, 'test_predictions.npz')
+    np.savez(predictions_file,
+             predictions=all_predictions,
+             labels=all_labels,
+             energies=all_energies)
+    print(f"✓ Predictions saved to: {predictions_file}")
+    
+    # Create plots directory
+    plots_dir = os.path.join(output_dir, 'plots')
+    os.makedirs(plots_dir, exist_ok=True)
+    
+    # Generate evaluation plots
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from sklearn.metrics import confusion_matrix, roc_curve, auc
+    import seaborn as sns
+    
+    # 1. Confusion Matrix
+    pred_classes = (all_predictions > 0.5).astype(int)
+    cm = confusion_matrix(all_labels, pred_classes)
+    
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                xticklabels=['CC', 'ES'], yticklabels=['CC', 'ES'])
+    plt.title('Confusion Matrix - Test Set')
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    plt.tight_layout()
+    plt.savefig(os.path.join(plots_dir, 'confusion_matrix.png'), dpi=150)
+    plt.close()
+    
+    # 2. ROC Curve
+    fpr, tpr, _ = roc_curve(all_labels, all_predictions)
+    roc_auc = auc(fpr, tpr)
+    
+    plt.figure(figsize=(8, 6))
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.3f})')
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label='Random')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve - Test Set')
+    plt.legend(loc="lower right")
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(os.path.join(plots_dir, 'roc_curve.png'), dpi=150)
+    plt.close()
+    
+    # 3. Prediction Distribution
+    plt.figure(figsize=(10, 6))
+    plt.hist(all_predictions[all_labels == 0], bins=50, alpha=0.5, label='CC (True)', color='blue')
+    plt.hist(all_predictions[all_labels == 1], bins=50, alpha=0.5, label='ES (True)', color='orange')
+    plt.xlabel('Predicted ES Probability')
+    plt.ylabel('Count')
+    plt.title('Prediction Distribution by True Label')
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(os.path.join(plots_dir, 'prediction_distribution.png'), dpi=150)
+    plt.close()
+    
+    # 4. Accuracy vs Energy
+    energy_bins = np.linspace(all_energies.min(), all_energies.max(), 20)
+    bin_centers = (energy_bins[:-1] + energy_bins[1:]) / 2
+    accuracies = []
+    
+    for i in range(len(energy_bins) - 1):
+        mask = (all_energies >= energy_bins[i]) & (all_energies < energy_bins[i + 1])
+        if mask.sum() > 0:
+            acc = (pred_classes[mask] == all_labels[mask]).mean()
+            accuracies.append(acc)
+        else:
+            accuracies.append(np.nan)
+    
+    plt.figure(figsize=(10, 6))
+    plt.plot(bin_centers, accuracies, 'o-', markersize=8, linewidth=2)
+    plt.axhline(y=0.5, color='r', linestyle='--', label='Random (50%)', alpha=0.5)
+    plt.xlabel('Particle Energy (MeV)')
+    plt.ylabel('Accuracy')
+    plt.title('Classification Accuracy vs Particle Energy')
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.ylim([0, 1])
+    plt.tight_layout()
+    plt.savefig(os.path.join(plots_dir, 'accuracy_vs_energy.png'), dpi=150)
+    plt.close()
+    
+    # 5. Training History
+    plt.figure(figsize=(12, 5))
+    
+    plt.subplot(1, 2, 1)
+    plt.plot(history.history['loss'], label='Training Loss')
+    plt.plot(history.history['val_loss'], label='Validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Loss Evolution')
+    plt.legend()
+    plt.grid(alpha=0.3)
+    
+    plt.subplot(1, 2, 2)
+    plt.plot(history.history['accuracy'], label='Training Accuracy')
+    plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.title('Accuracy Evolution')
+    plt.legend()
+    plt.grid(alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(plots_dir, 'training_history.png'), dpi=150)
+    plt.close()
+    
+    print(f"✓ Plots saved to: {plots_dir}")
+    
+    # Calculate test metrics
+    test_accuracy = (pred_classes == all_labels).mean()
+    
+    print(f"\nTest Set Results:")
+    print(f"  Accuracy: {test_accuracy:.4f}")
+    print(f"  ROC AUC: {roc_auc:.4f}")
+    print(f"  Confusion Matrix:")
+    print(f"    TN={cm[0,0]}, FP={cm[0,1]}")
+    print(f"    FN={cm[1,0]}, TP={cm[1,1]}")
+    
+    print(f"\n✓ Results saved to: {output_dir}")
+    
+    # Save final results with test metrics
     results = {
         'final_val_loss': float(history.history['val_loss'][-1]),
         'final_val_accuracy': float(history.history['val_accuracy'][-1]),
         'best_val_loss': float(min(history.history['val_loss'])),
         'best_val_accuracy': float(max(history.history['val_accuracy'])),
+        'test_accuracy': float(test_accuracy),
+        'test_roc_auc': float(roc_auc),
+        'confusion_matrix': cm.tolist(),
         'config': config
     }
     

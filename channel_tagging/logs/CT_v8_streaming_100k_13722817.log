@@ -237,3 +237,53 @@
 	14041  -  MemoryUsage of job (MB)
 	14377252  -  ResidentSetSize of job (KB)
 ...
+006 (13722817.000.000) 11/12 16:35:56 Image size of job updated: 14581908
+	14041  -  MemoryUsage of job (MB)
+	14377252  -  ResidentSetSize of job (KB)
+...
+006 (13722817.000.000) 11/12 16:40:56 Image size of job updated: 14581908
+	14108  -  MemoryUsage of job (MB)
+	14446460  -  ResidentSetSize of job (KB)
+...
+006 (13722817.000.000) 11/12 16:45:57 Image size of job updated: 14590156
+	14109  -  MemoryUsage of job (MB)
+	14446652  -  ResidentSetSize of job (KB)
+...
+006 (13722817.000.000) 11/12 16:50:58 Image size of job updated: 14619792
+	14109  -  MemoryUsage of job (MB)
+	14446652  -  ResidentSetSize of job (KB)
+...
+006 (13722817.000.000) 11/12 17:21:02 Image size of job updated: 14619792
+	14112  -  MemoryUsage of job (MB)
+	14450332  -  ResidentSetSize of job (KB)
+...
+040 (13722817.000.000) 11/12 18:51:12 Started transferring output files
+...
+040 (13722817.000.000) 11/12 18:51:25 Finished transferring output files
+...
+021 (13722817.000.000) 11/12 18:51:25 Error from starter on slot1_6@b9g03p0586.cern.ch:
+	STARTER at 128.142.161.109 failed to send file(s) to <188.184.90.62:9618>: |Error: sending file /pool/condor/dir_250716/_condor_stdout: max total download bytes exceeded (max=1024 MB, this file=220838 MB); SHADOW failed to receive file(s) from <128.142.161.109:39255>
+	Code 33 Subcode 0
+...
+004 (13722817.000.000) 11/12 18:51:25 Job was evicted.
+	(0) CPU times
+		Usr 5 00:21:05, Sys 0 02:15:18  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	1073741824  -  Run Bytes Sent By Job
+	1680  -  Run Bytes Received By Job
+	Error from slot1_6@b9g03p0586.cern.ch: STARTER at 128.142.161.109 failed to send file(s) to <188.184.90.62:9618>: |Error: sending file /pool/condor/dir_250716/_condor_stdout: max total download bytes exceeded (max=1024 MB, this file=220838 MB); SHADOW failed to receive file(s) from <128.142.161.109:39255>
+	Partitionable Resources :        Usage  Request Allocated 
+	   Cpus                 :         0.98        6         6 
+	   Disk (KB)            : 226138596     5242880   5245184 
+	   GPUs                 :                               0 
+	   Memory (MB)          :     14112       18000     18000 
+	   TimeExecute (s)      :     61920                       
+	   TimeSlotBusy (s)     :     61935                       
+...
+012 (13722817.000.000) 11/12 18:51:26 Job was held.
+	Error from slot1_6@b9g03p0586.cern.ch: STARTER at 128.142.161.109 failed to send file(s) to <188.184.90.62:9618>: |Error: sending file /pool/condor/dir_250716/_condor_stdout: max total download bytes exceeded (max=1024 MB, this file=220838 MB); SHADOW failed to receive file(s) from <128.142.161.109:39255>
+	Code 33 Subcode 0
+...
+009 (13722817.000.000) 11/12 18:52:07 Job was aborted.
+	Job removed by SYSTEM_PERIODIC_REMOVE due to disk usage exceeded allowed max
+...

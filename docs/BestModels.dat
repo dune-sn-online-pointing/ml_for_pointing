@@ -1,0 +1,25 @@
+# Best Performing Neural Network Models
+# Updated: November 15, 2025
+
+Task                  | Version  | Performance Metric                | Model Path
+--------------------- | -------- | --------------------------------- | ----------------------------------------------------------
+Electron Direction    | v14      | 25° @ 68% quantile               | /eos/user/e/evilla/dune/sn-tps/neural_networks/electron_direction/three_plane_v14_10k_hyperopt_20251111_175141/
+Main Track Identifier | v10      | 91.4% accuracy, 93.7% AUC-ROC    | /eos/user/e/evilla/dune/sn-tps/neural_networks/mt_identifier/v10_100k_nov13/mt_identifier_simple_cnn_20251113_145400/
+Channel Tagging       | v42      | 67.1% train, 65.3% val accuracy  | /eos/user/e/evilla/dune/sn-tps/neural_networks/channel_tagging/v42_corrected_100k/20251114_213453/
+
+## Notes
+
+- **ED v14**: Three-plane input, 10k samples
+  - Hyperparameter optimization performed
+  - Performance: 25° @ 68% quantile on validation set
+  - Status: Satisfactory for current needs
+  
+- **MT v10**: Simple CNN architecture, 100k balanced samples (50k ES + 50k CC)
+  - Binary classification: ES vs CC main track identification
+  - Training dataset: nov11 cluster images (128×32 pixels)
+
+- **CT v42**: 100k balanced samples (50k per class), corrected data
+  - 4 conv layers, 64 filters, batch norm
+  - 49 epochs trained, stopped at validation plateau
+  - Performance: 67.1% train / 65.3% validation accuracy  
+  - Status: Needs deeper architecture or more data for improvement

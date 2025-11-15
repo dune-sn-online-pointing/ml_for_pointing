@@ -4,7 +4,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pylab
 import seaborn as sns
-import hyperopt as hp
+try:
+    import hyperopt as hp
+except ImportError:
+    hp = None
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -59,9 +62,10 @@ def build_model(buid_parameters, train, validation, output_folder, input_shape, 
 
 def create_and_train_model(model_parameters, train, validation, output_folder, model_name):
     input_shape = model_parameters['input_shape']
-    build_parameters = model_parameters['build_parameters'] 
+    # Use model_parameters directly as build_parameters for backward compatibility
+    build_parameters = model_parameters.get('build_parameters', model_parameters)
     model, history = build_model(build_parameters, train, validation, output_folder, input_shape, epochs=model_parameters.get("epochs", 200), batch_size=model_parameters.get("batch_size", 32))
-
+    
     return model, history
 
 

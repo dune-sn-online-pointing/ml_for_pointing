@@ -517,10 +517,25 @@ def load_three_plane_matched(
         print(f"Loading 3-plane matched data from: {data_dir}")
     
     # Get list of X-plane files
+    # First try flat structure, then try subdirectories
     x_files = sorted(data_dir.glob("*_planeX.npz"))
+    use_subdirs = False
     
     if len(x_files) == 0:
-        raise ValueError(f"No *_planeX.npz files found in {data_dir}")
+        # Try subdirectory structure (X/, U/, V/ folders)
+        x_dir = data_dir / "X"
+        u_dir = data_dir / "U"
+        v_dir = data_dir / "V"
+        if x_dir.exists() and u_dir.exists() and v_dir.exists():
+            x_files = sorted(x_dir.glob("*_planeX.npz"))
+            use_subdirs = True
+            if verbose:
+                print(f"Using subdirectory structure: X/, U/, V/ folders")
+    
+    if len(x_files) == 0:
+        raise ValueError(f"No *_planeX.npz files found in {data_dir} or {data_dir}/X/")
+
+
     
     if verbose:
         print(f"Found {len(x_files)} X-plane files")
@@ -532,10 +547,18 @@ def load_three_plane_matched(
     
     for x_file in x_files:
         # Get corresponding U and V files
-        prefix = str(x_file)[:-11]  # Remove "_planeX.npz"
-        u_file = Path(f"{prefix}_planeU.npz")
-        v_file = Path(f"{prefix}_planeV.npz")
-        
+        if use_subdirs:
+            # Files are in separate U/, V/, X/ directories
+            filename = x_file.name
+            base_name = filename[:-11]  # Remove "_planeX.npz"
+            u_file = data_dir / "U" / f"{base_name}_planeU.npz"
+            v_file = data_dir / "V" / f"{base_name}_planeV.npz"
+        else:
+            # Files are in the same directory (flat structure)
+            prefix = str(x_file)[:-11]  # Remove "_planeX.npz"
+            u_file = Path(f"{prefix}_planeU.npz")
+            v_file = Path(f"{prefix}_planeV.npz")
+
         if not u_file.exists() or not v_file.exists():
             if verbose:
                 print(f"Warning: Skipping {x_file.name} - missing U or V plane")

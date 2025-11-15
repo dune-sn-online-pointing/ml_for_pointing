@@ -26,7 +26,9 @@ except Exception:
     hp = None
 
 # Ensure local python package directory is on the path, then import project libs
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'python'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'python'))
+# Also add project root for mt_identifier imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 import general_purpose_libs as gpl
 import classification_libs as cl
@@ -145,11 +147,11 @@ def select_model(model_name):
     """Import and return the selected model module"""
     
     if model_name == 'simple_cnn':
-        import models.simple_cnn as selected_model
+        import mt_identifier.models.simple_cnn as selected_model
     elif model_name == 'hyperopt_simple_cnn':
-        import models.hyperopt_simple_cnn as selected_model
+        import mt_identifier.models.hyperopt_simple_cnn as selected_model
     elif model_name == 'hyperopt_simple_cnn_multiclass':
-        import models.hyperopt_simple_cnn_multiclass as selected_model
+        import mt_identifier.models.hyperopt_simple_cnn_multiclass as selected_model
     else:
         raise ValueError(f"Unknown model: {model_name}")
     

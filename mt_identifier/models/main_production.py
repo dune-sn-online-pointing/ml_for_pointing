@@ -346,7 +346,7 @@ def main():
     epochs = config['model_parameters'].get('epochs', 200)
     batch_size = config['model_parameters'].get('batch_size', 32)
     
-    model = model_module.build_model(
+    model, history = model_module.build_model(
         config['model_parameters'],
         train,
         val,

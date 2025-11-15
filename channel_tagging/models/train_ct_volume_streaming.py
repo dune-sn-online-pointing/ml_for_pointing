@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Channel tagging training with volume images - STREAMING mode.
-Uses TensorFlow data generators to avoid loading all data into memory.
+Channel tagging training with volume images - NO hyperopt, simple fixed parameters.
+Loads all ES and CC volume images, trains a simple CNN.
 """
 
 import sys
@@ -16,17 +16,27 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 import glob
+from sklearn.metrics import confusion_matrix, classification_report
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, classification_report
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 print("=" * 80)
-print("CHANNEL TAGGING TRAINING - VOLUME IMAGES (STREAMING MODE)")
+print("CHANNEL TAGGING TRAINING - VOLUME IMAGES (STREAMING)")
 print("=" * 80)
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Train CT with volume images (streaming)')
+    parser = argparse.ArgumentParser(description='Train CT with volume images (deep CNN)')
     parser.add_argument('--plane', '-p', type=str, default='X', choices=['U', 'V', 'X'],
                         help='Plane to use')
     parser.add_argument('--max-samples', '-m', type=int, default=50000,
-                        help='Maximum samples per class to use')
+                        help='Maximum samples to load (per class)')
     parser.add_argument('--json', '-j', type=str, required=True,
                         help='JSON config file')
     return parser.parse_args()
@@ -37,108 +47,218 @@ def load_config(json_file):
         config = json.load(f)
     return config
 
-def create_simple_cnn(input_shape=(208, 1242, 1), n_filters=32, n_conv_layers=3, 
-                      dropout_rate=0.3, dense_units=128, n_classes=2):
-    """Create a simple CNN model."""
+def create_deep_cnn(input_shape=(208, 1242, 1), filter_list=[28, 28, 29, 47, 48, 48], 
+                    kernel_sizes=[3, 3, 3, 3, 3, 3], dropout_rate=0.3, 
+                    dense_units=[96, 32], n_classes=2):
+    """Create a deep CNN model with custom architecture."""
     model = keras.Sequential([
         keras.layers.Input(shape=input_shape)
     ])
     
-    # Convolutional layers
-    for i in range(n_conv_layers):
-        filters = n_filters * (2 ** i)
-        model.add(keras.layers.Conv2D(filters, (3, 3), activation='relu', padding='same'))
-        model.add(keras.layers.MaxPooling2D((2, 2)))
+    # Convolutional blocks
+    for i, (filters, kernel_size) in enumerate(zip(filter_list, kernel_sizes)):
+        model.add(keras.layers.Conv2D(filters, (kernel_size, kernel_size), 
+                                     activation='relu', padding='same'))
+        if i < len(filter_list) - 1:  # Don't pool after last conv
+            model.add(keras.layers.MaxPooling2D((2, 2)))
     
     # Dense layers
     model.add(keras.layers.GlobalAveragePooling2D())
-    model.add(keras.layers.Dense(dense_units, activation='relu'))
-    model.add(keras.layers.Dropout(dropout_rate))
+    for units in dense_units:
+        model.add(keras.layers.Dense(units, activation='relu'))
+        model.add(keras.layers.Dropout(dropout_rate))
     model.add(keras.layers.Dense(n_classes, activation='softmax'))
     
     return model
 
-def volume_data_generator(files, max_samples, label, batch_size=32):
-    """
-    Generator that yields batches of volume images.
-    Args:
-        files: List of npz file paths
-        max_samples: Maximum number of samples to load
-        label: Class label (0 for ES, 1 for CC)
-        batch_size: Batch size
-    """
-    images_batch = []
-    labels_batch = []
-    count = 0
+def load_volume_data(es_directory, cc_directory, plane='X', max_samples_per_class=25000):
+    """Load volume images from ES and CC directories."""
+    print(f"\nLoading volume images for plane {plane}...")
+    print(f"Maximum {max_samples_per_class} samples per class")
+    print(f"ES directory: {es_directory}")
+    print(f"CC directory: {cc_directory}")
     
-    while True:  # Infinite loop for training
-        for file_path in files:
-            if count >= max_samples:
-                # Yield remaining batch and reset
-                if len(images_batch) > 0:
-                    yield (np.array(images_batch, dtype=np.float32), 
-                           np.array(labels_batch, dtype=np.int32))
-                images_batch = []
-                labels_batch = []
-                count = 0
-                
+    es_pattern = f'{es_directory}*plane{plane}.npz'
+    cc_pattern = f'{cc_directory}*plane{plane}.npz'
+    
+    es_files = sorted(glob.glob(es_pattern))
+    cc_files = sorted(glob.glob(cc_pattern))
+    
+    print(f"Found {len(es_files)} ES files, {len(cc_files)} CC files")
+    
+    images_list = []
+    labels_list = []
+    
+    # Load ES samples (label=0)
+    es_count = 0
+    for f in es_files:
+        if es_count >= max_samples_per_class:
+            break
+        try:
+            data = np.load(f, allow_pickle=True)
+            imgs = data['images']
+            for img in imgs:
+                if es_count >= max_samples_per_class:
+                    break
+                img_array = np.array(img, dtype=np.float32)
+                if img_array.shape == (208, 1242):
+                    images_list.append(img_array)
+                    labels_list.append(0)  # ES
+                    es_count += 1
+        except Exception as e:
+            print(f"Warning: Failed to load {f}: {e}")
+            continue
+        
+        if es_count % 5000 == 0:
+            print(f"  Loaded {es_count} ES samples...")
+    
+    # Load CC samples (label=1)
+    cc_count = 0
+    for f in cc_files:
+        if cc_count >= max_samples_per_class:
+            break
+        try:
+            data = np.load(f, allow_pickle=True)
+            imgs = data['images']
+            for img in imgs:
+                if cc_count >= max_samples_per_class:
+                    break
+                img_array = np.array(img, dtype=np.float32)
+                if img_array.shape == (208, 1242):
+                    images_list.append(img_array)
+                    labels_list.append(1)  # CC
+                    cc_count += 1
+        except Exception as e:
+            print(f"Warning: Failed to load {f}: {e}")
+            continue
+        
+        if cc_count % 5000 == 0:
+            print(f"  Loaded {cc_count} CC samples...")
+    
+    print(f"\nTotal loaded: {es_count} ES samples, {cc_count} CC samples")
+    
+    # Convert to arrays
+    images = np.array(images_list, dtype=np.float32)
+    labels = np.array(labels_list, dtype=np.int32)
+    
+    # Normalize images (per-image normalization)
+    print("Normalizing images...")
+    for i in range(len(images)):
+        img_max = np.max(images[i])
+        if img_max > 0:
+            images[i] = images[i] / img_max
+    
+    # Add channel dimension
+    images = images[..., np.newaxis]
+    
+    # Shuffle
+    print("Shuffling data...")
+    indices = np.random.permutation(len(images))
+    images = images[indices]
+    labels = labels[indices]
+    
+    print(f"Final dataset: {images.shape}, labels: {labels.shape}")
+    print(f"Label distribution: ES={np.sum(labels==0)}, CC={np.sum(labels==1)}")
+    
+    return images, labels
+
+
+
+def create_streaming_generator(es_directory, cc_directory, plane='X', max_samples_per_class=25000, batch_size=16):
+    """Create a streaming data generator that loads data in batches."""
+    import glob
+    
+    es_pattern = f'{es_directory}*plane{plane}.npz'
+    cc_pattern = f'{cc_directory}*plane{plane}.npz'
+    
+    es_files = sorted(glob.glob(es_pattern))
+    cc_files = sorted(glob.glob(cc_pattern))
+    
+    print(f"\nStreaming mode: {len(es_files)} ES files, {len(cc_files)} CC files")
+    print(f"Target: {max_samples_per_class} samples per class")
+    
+    def data_generator():
+        """Generator that yields batches of data."""
+        es_count = 0
+        cc_count = 0
+        images_batch = []
+        labels_batch = []
+        
+        # Load ES samples
+        for f in es_files:
+            if es_count >= max_samples_per_class:
+                break
             try:
-                data = np.load(file_path, allow_pickle=True)
+                data = np.load(f, allow_pickle=True)
                 imgs = data['images']
-                
                 for img in imgs:
-                    if count >= max_samples:
+                    if es_count >= max_samples_per_class:
                         break
-                        
-                    # Convert and normalize
                     img_array = np.array(img, dtype=np.float32)
                     if img_array.shape == (208, 1242):
                         # Normalize
                         img_max = np.max(img_array)
                         if img_max > 0:
                             img_array = img_array / img_max
+                        # Add channel dimension
+                        img_array = img_array[..., np.newaxis]
                         
-                        # Add to batch
-                        images_batch.append(img_array[..., np.newaxis])
-                        labels_batch.append(label)
-                        count += 1
+                        images_batch.append(img_array)
+                        labels_batch.append(0)  # ES
+                        es_count += 1
                         
-                        # Yield batch if full
+                        # Yield batch when full
                         if len(images_batch) >= batch_size:
                             yield (np.array(images_batch, dtype=np.float32), 
                                    np.array(labels_batch, dtype=np.int32))
                             images_batch = []
                             labels_batch = []
-                            
             except Exception as e:
-                print(f"Warning: Failed to load {file_path}: {e}")
+                print(f"Warning: Failed to load {f}: {e}")
                 continue
         
-        # Yield final batch if any
+        # Load CC samples
+        for f in cc_files:
+            if cc_count >= max_samples_per_class:
+                break
+            try:
+                data = np.load(f, allow_pickle=True)
+                imgs = data['images']
+                for img in imgs:
+                    if cc_count >= max_samples_per_class:
+                        break
+                    img_array = np.array(img, dtype=np.float32)
+                    if img_array.shape == (208, 1242):
+                        # Normalize
+                        img_max = np.max(img_array)
+                        if img_max > 0:
+                            img_array = img_array / img_max
+                        # Add channel dimension
+                        img_array = img_array[..., np.newaxis]
+                        
+                        images_batch.append(img_array)
+                        labels_batch.append(1)  # CC
+                        cc_count += 1
+                        
+                        # Yield batch when full
+                        if len(images_batch) >= batch_size:
+                            yield (np.array(images_batch, dtype=np.float32), 
+                                   np.array(labels_batch, dtype=np.int32))
+                            images_batch = []
+                            labels_batch = []
+            except Exception as e:
+                print(f"Warning: Failed to load {f}: {e}")
+                continue
+        
+        # Yield remaining samples
         if len(images_batch) > 0:
             yield (np.array(images_batch, dtype=np.float32), 
                    np.array(labels_batch, dtype=np.int32))
-            images_batch = []
-            labels_batch = []
+        
+        print(f"\nStreaming loaded: {es_count} ES, {cc_count} CC samples")
+    
+    return data_generator, es_count + cc_count
 
-def count_samples_in_files(files, max_samples):
-    """Count actual number of samples available."""
-    count = 0
-    for f in files:
-        if count >= max_samples:
-            break
-        try:
-            data = np.load(f, allow_pickle=True)
-            imgs = data['images']
-            for img in imgs:
-                img_array = np.array(img, dtype=np.float32)
-                if img_array.shape == (208, 1242):
-                    count += 1
-                    if count >= max_samples:
-                        break
-        except:
-            continue
-    return count
 
 def main():
     args = parse_args()
@@ -148,90 +268,118 @@ def main():
     print(f"Plane: {args.plane}")
     print(f"Max samples per class: {args.max_samples // 2}")
     
-    # Get file lists
-    es_pattern = f'/eos/home-e/evilla/dune/sn-tps/production_es/volume_images_fixed_matching/*plane{args.plane}.npz'
-    cc_pattern = f'/eos/home-e/evilla/dune/sn-tps/production_cc/volume_images_fixed_matching/*plane{args.plane}.npz'
+    # Get directories from config
+    es_directory = config['data']['es_directory']
+    cc_directory = config['data']['cc_directory']
+    plane = config['data']['plane']
     
-    es_files = sorted(glob.glob(es_pattern))
-    cc_files = sorted(glob.glob(cc_pattern))
+    # Check if streaming mode
+    use_streaming = config.get('data', {}).get('use_streaming', False)
+    batch_size = config.get('batch_size', 16)
     
-    print(f"\nFound {len(es_files)} ES files, {len(cc_files)} CC files")
-    
-    # Count actual samples
-    max_per_class = args.max_samples // 2
-    print(f"Counting samples (may take a moment)...")
-    es_count = count_samples_in_files(es_files, max_per_class)
-    cc_count = count_samples_in_files(cc_files, max_per_class)
-    
-    total_samples = es_count + cc_count
-    n_train = int(0.7 * total_samples)
-    n_val = int(0.15 * total_samples)
-    n_test = total_samples - n_train - n_val
-    
-    print(f"\nActual samples: ES={es_count}, CC={cc_count}, Total={total_samples}")
-    print(f"Split: train={n_train}, val={n_val}, test={n_test}")
-    
-    # Split files for train/val/test
-    # Simple split: use file-level split (70% files train, 15% val, 15% test)
-    n_es_files = len(es_files)
-    n_cc_files = len(cc_files)
-    
-    es_train_files = es_files[:int(0.7 * n_es_files)]
-    es_val_files = es_files[int(0.7 * n_es_files):int(0.85 * n_es_files)]
-    es_test_files = es_files[int(0.85 * n_es_files):]
-    
-    cc_train_files = cc_files[:int(0.7 * n_cc_files)]
-    cc_val_files = cc_files[int(0.7 * n_cc_files):int(0.85 * n_cc_files)]
-    cc_test_files = cc_files[int(0.85 * n_cc_files):]
-    
-    # Create datasets using tf.data
-    batch_size = config.get('batch_size', 32)
-    
-    print(f"\nCreating streaming datasets with batch_size={batch_size}...")
-    
-    # Create generators for each class and split
-    output_signature = (
-        tf.TensorSpec(shape=(None, 208, 1242, 1), dtype=tf.float32),
-        tf.TensorSpec(shape=(None,), dtype=tf.int32)
-    )
-    
-    # Training dataset: interleave ES and CC
-    train_es_ds = tf.data.Dataset.from_generator(
-        lambda: volume_data_generator(es_train_files, int(max_per_class * 0.7), 0, batch_size),
-        output_signature=output_signature
-    )
-    train_cc_ds = tf.data.Dataset.from_generator(
-        lambda: volume_data_generator(cc_train_files, int(max_per_class * 0.7), 1, batch_size),
-        output_signature=output_signature
-    )
-    train_ds = tf.data.Dataset.sample_from_datasets(
-        [train_es_ds, train_cc_ds], 
-        weights=[0.5, 0.5]
-    ).prefetch(tf.data.AUTOTUNE)
-    
-    # Validation dataset
-    val_es_ds = tf.data.Dataset.from_generator(
-        lambda: volume_data_generator(es_val_files, int(max_per_class * 0.15), 0, batch_size),
-        output_signature=output_signature
-    )
-    val_cc_ds = tf.data.Dataset.from_generator(
-        lambda: volume_data_generator(cc_val_files, int(max_per_class * 0.15), 1, batch_size),
-        output_signature=output_signature
-    )
-    val_ds = tf.data.Dataset.sample_from_datasets(
-        [val_es_ds, val_cc_ds],
-        weights=[0.5, 0.5]
-    ).prefetch(tf.data.AUTOTUNE)
+    if use_streaming:
+        print("\n>>> Using STREAMING mode <<<")
+        # Create streaming datasets
+        data_gen, total_samples = create_streaming_generator(
+            es_directory=es_directory,
+            cc_directory=cc_directory,
+            plane=plane,
+            max_samples_per_class=args.max_samples // 2,
+            batch_size=batch_size
+        )
+        
+        # Calculate split sizes
+        n_train = int(0.75 * total_samples)
+        n_val = int(0.15 * total_samples)
+        n_test = total_samples - n_train - n_val
+        
+        print(f"\nDataset split (estimated):")
+        print(f"  Train: {n_train}")
+        print(f"  Val:   {n_val}")
+        print(f"  Test:  {n_test}")
+        
+        # Create TF dataset from generator
+        train_ds = tf.data.Dataset.from_generator(
+            data_gen,
+            output_signature=(
+                tf.TensorSpec(shape=(None, 208, 1242, 1), dtype=tf.float32),
+                tf.TensorSpec(shape=(None,), dtype=tf.int32)
+            )
+        ).unbatch().take(n_train).shuffle(10000).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+        
+        val_ds = tf.data.Dataset.from_generator(
+            data_gen,
+            output_signature=(
+                tf.TensorSpec(shape=(None, 208, 1242, 1), dtype=tf.float32),
+                tf.TensorSpec(shape=(None,), dtype=tf.int32)
+            )
+        ).unbatch().skip(n_train).take(n_val).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+        
+        # For test set, we need to load it fully for evaluation
+        print("\nLoading test set...")
+        test_gen, _ = create_streaming_generator(
+            es_directory=es_directory,
+            cc_directory=cc_directory,
+            plane=plane,
+            max_samples_per_class=args.max_samples // 2,
+            batch_size=batch_size
+        )
+        test_images = []
+        test_labels = []
+        for imgs, lbls in test_gen():
+            test_images.extend(imgs)
+            test_labels.extend(lbls)
+        test_images = np.array(test_images)
+        test_labels = np.array(test_labels)
+        # Take only test portion
+        X_test = test_images[n_train+n_val:]
+        y_test = test_labels[n_train+n_val:]
+        
+    else:
+        print("\n>>> Using FULL LOAD mode <<<")
+        # Load data fully into memory
+        images, labels = load_volume_data(
+            es_directory=es_directory,
+            cc_directory=cc_directory,
+            plane=plane,
+            max_samples_per_class=args.max_samples // 2
+        )
+        
+        # Split data: 75% train, 15% val, 10% test
+        n = len(images)
+        n_train = int(0.75 * n)
+        n_val = int(0.15 * n)
+        
+        X_train = images[:n_train]
+        y_train = labels[:n_train]
+        X_val = images[n_train:n_train+n_val]
+        y_val = labels[n_train:n_train+n_val]
+        X_test = images[n_train+n_val:]
+        y_test = labels[n_train+n_val:]
+        
+        print(f"\nDataset split:")
+        print(f"  Train: {len(X_train)} ({np.sum(y_train==0)} ES, {np.sum(y_train==1)} CC)")
+        print(f"  Val:   {len(X_val)} ({np.sum(y_val==0)} ES, {np.sum(y_val==1)} CC)")
+        print(f"  Test:  {len(X_test)} ({np.sum(y_test==0)} ES, {np.sum(y_test==1)} CC)")
+        
+        # Create datasets
+        print("\nCreating TensorFlow datasets...")
+        
+        train_ds = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+        train_ds = train_ds.shuffle(10000).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+        
+        val_ds = tf.data.Dataset.from_tensor_slices((X_val, y_val))
+        val_ds = val_ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
     
     # Create model
     print("\nCreating model...")
     model_params = config.get('model_params', {})
-    model = create_simple_cnn(
+    model = create_deep_cnn(
         input_shape=(208, 1242, 1),
-        n_filters=model_params.get('n_filters', 32),
-        n_conv_layers=model_params.get('n_conv_layers', 3),
+        filter_list=model_params.get('filter_list', [28, 28, 29, 47, 48, 48]),
+        kernel_sizes=model_params.get('kernel_sizes', [3, 3, 3, 3, 3, 3]),
         dropout_rate=model_params.get('dropout_rate', 0.3),
-        dense_units=model_params.get('dense_units', 128)
+        dense_units=model_params.get('dense_units', [96, 32])
     )
     
     learning_rate = model_params.get('learning_rate', 0.001)
@@ -245,10 +393,11 @@ def main():
     
     # Create output directory
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    model_name = config.get('model_name', 'ct_volume_streaming')
+    model_name = config.get('model_name', 'ct_volume_simple')
+    version = config.get('version', 'unknown')
     output_dir = os.path.join(
-        config.get('output_dir', 'training_output/channel_tagging'),
-        model_name,
+        config.get('output', {}).get('base_dir', 'training_output/channel_tagging'),
+        version,
         timestamp
     )
     os.makedirs(output_dir, exist_ok=True)
@@ -256,7 +405,7 @@ def main():
     # Save config
     config['timestamp'] = timestamp
     config['plane'] = args.plane
-    config['streaming_mode'] = True
+    config['actual_samples'] = {'train': len(X_train), 'val': len(X_val), 'test': len(X_test)}
     with open(os.path.join(output_dir, 'config.json'), 'w') as f:
         json.dump(config, f, indent=2)
     
@@ -274,231 +423,94 @@ def main():
             save_best_only=True,
             verbose=1
         ),
+        keras.callbacks.ModelCheckpoint(
+            os.path.join(output_dir, 'checkpoint_epoch_{epoch:03d}.keras'),
+            save_freq='epoch',
+            verbose=1
+        ),
         keras.callbacks.CSVLogger(
             os.path.join(output_dir, 'training_history.csv')
         )
     ]
-    
-    # Calculate steps per epoch
-    steps_per_epoch = n_train // batch_size
-    validation_steps = n_val // batch_size
-    
-    print(f"\nTraining with:")
-    print(f"  Steps per epoch: {steps_per_epoch}")
-    print(f"  Validation steps: {validation_steps}")
     
     # Train
     print("\nTraining...")
     history = model.fit(
         train_ds,
         epochs=config.get('epochs', 50),
-        steps_per_epoch=steps_per_epoch,
         validation_data=val_ds,
-        validation_steps=validation_steps,
         callbacks=callbacks,
         verbose=1
     )
     
-    print(f"\n✓ Training complete!")
+    # Evaluate
+    print("\nEvaluating on test set...")
+    test_loss, test_acc = model.evaluate(
+        X_test, y_test, batch_size=batch_size, verbose=0
+    )
     
-    # Evaluate on test set and save predictions
-    print("\n" + "="*60)
-    print("TEST SET EVALUATION")
-    print("="*60)
-    
-    # Create test dataset
-    test_ds = create_dataset(es_test_files, cc_test_files, batch_size, is_training=False)
-    
-    # Load best model
-    best_model = keras.models.load_model(os.path.join(output_dir, 'best_model.keras'))
-    
-    # Collect predictions and metadata
-    all_predictions = []
-    all_labels = []
-    all_energies = []
-    
-    print("Generating predictions on test set...")
-    for batch_images, batch_labels in test_ds:
-        predictions = best_model.predict(batch_images, verbose=0)
-        all_predictions.extend(predictions[:, 1])  # Probability of ES class
-        all_labels.extend(batch_labels.numpy())
-    
-    # Load metadata from test files to get energies
-    print("Loading test metadata...")
-    for es_file in es_test_files:
-        data = np.load(es_file, allow_pickle=True)
-        for meta in data['metadata']:
-            # Use cluster_energy if available (new format), else particle_energy (old format)
-            if isinstance(meta, dict):
-                # Old volume format: dictionary with keys
-                energy = meta.get('cluster_energy', meta.get('particle_energy', 0))
-            else:
-                # New cluster format: numpy array [event, is_marley, is_main_track, is_es, 
-                #                                  pos(3), mom(3), cluster_energy, particle_energy, plane, match_id]
-                # cluster_energy is at index 10
-                energy = float(meta[10]) if len(meta) > 10 else float(meta[11] if len(meta) > 11 else 0)
-            all_energies.append(energy)
-    
-    for cc_file in cc_test_files:
-        data = np.load(cc_file, allow_pickle=True)
-        for meta in data['metadata']:
-            # Use cluster_energy if available (new format), else particle_energy (old format)
-            if isinstance(meta, dict):
-                # Old volume format: dictionary with keys
-                energy = meta.get('cluster_energy', meta.get('particle_energy', 0))
-            else:
-                # New cluster format: numpy array
-                # cluster_energy is at index 10
-                energy = float(meta[10]) if len(meta) > 10 else float(meta[11] if len(meta) > 11 else 0)
-            all_energies.append(energy)
-    
-    all_predictions = np.array(all_predictions[:len(all_energies)])
-    all_labels = np.array(all_labels[:len(all_energies)])
-    all_energies = np.array(all_energies)
+    print(f"\nTest Results:")
+    print(f"  Loss: {test_loss:.4f}")
+    print(f"  Accuracy: {test_acc:.4f}")
+
+    # Generate predictions for confusion matrix
+    print("\nGenerating predictions and confusion matrix...")
+    y_pred_probs = model.predict(X_test, batch_size=batch_size, verbose=0)
+    y_pred = np.argmax(y_pred_probs, axis=1)
+    y_true = y_test
     
     # Save predictions
-    predictions_file = os.path.join(output_dir, 'test_predictions.npz')
-    np.savez(predictions_file,
-             predictions=all_predictions,
-             labels=all_labels,
-             energies=all_energies)
-    print(f"✓ Predictions saved to: {predictions_file}")
+    np.savez(
+        os.path.join(output_dir, 'test_predictions.npz'),
+        y_true=y_true,
+        y_pred=y_pred,
+        y_prob=y_pred_probs
+    )
     
-    # Create plots directory
-    plots_dir = os.path.join(output_dir, 'plots')
-    os.makedirs(plots_dir, exist_ok=True)
+    # Generate confusion matrix
+    cm = confusion_matrix(y_true, y_pred)
+    class_names = ['ES', 'CC']
     
-    # Generate evaluation plots
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    from sklearn.metrics import confusion_matrix, roc_curve, auc
-    import seaborn as sns
-    
-    # 1. Confusion Matrix
-    pred_classes = (all_predictions > 0.5).astype(int)
-    cm = confusion_matrix(all_labels, pred_classes)
-    
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-                xticklabels=['CC', 'ES'], yticklabels=['CC', 'ES'])
-    plt.title('Confusion Matrix - Test Set')
-    plt.ylabel('True Label')
-    plt.xlabel('Predicted Label')
+    # Plot confusion matrix
+    fig, ax = plt.subplots(figsize=(8, 7))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', square=True,
+                xticklabels=class_names, yticklabels=class_names,
+                cbar_kws={'label': 'Count'}, ax=ax, annot_kws={'size': 14})
+    ax.set_xlabel('Predicted Label', fontsize=13, fontweight='bold')
+    ax.set_ylabel('True Label', fontsize=13, fontweight='bold')
+    ax.set_title(f'Confusion Matrix - {config.get("version", "CT")}', 
+                 fontsize=14, fontweight='bold')
     plt.tight_layout()
-    plt.savefig(os.path.join(plots_dir, 'confusion_matrix.png'), dpi=150)
+    plt.savefig(os.path.join(output_dir, 'confusion_matrix.png'), 
+                dpi=150, bbox_inches='tight')
     plt.close()
     
-    # 2. ROC Curve
-    fpr, tpr, _ = roc_curve(all_labels, all_predictions)
-    roc_auc = auc(fpr, tpr)
+    # Generate classification report
+    report = classification_report(y_true, y_pred, target_names=class_names)
+    with open(os.path.join(output_dir, 'classification_report.txt'), 'w') as f:
+        f.write(report)
     
-    plt.figure(figsize=(8, 6))
-    plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.3f})')
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label='Random')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('ROC Curve - Test Set')
-    plt.legend(loc="lower right")
-    plt.grid(alpha=0.3)
-    plt.tight_layout()
-    plt.savefig(os.path.join(plots_dir, 'roc_curve.png'), dpi=150)
-    plt.close()
+    print(f"✓ Confusion matrix saved to: {output_dir}/confusion_matrix.png")
+    print(f"✓ Predictions saved to: {output_dir}/test_predictions.npz")
+    print(f"\nClassification Report:")
+    print(report)
     
-    # 3. Prediction Distribution
-    plt.figure(figsize=(10, 6))
-    plt.hist(all_predictions[all_labels == 0], bins=50, alpha=0.5, label='CC (True)', color='blue')
-    plt.hist(all_predictions[all_labels == 1], bins=50, alpha=0.5, label='ES (True)', color='orange')
-    plt.xlabel('Predicted ES Probability')
-    plt.ylabel('Count')
-    plt.title('Prediction Distribution by True Label')
-    plt.legend()
-    plt.grid(alpha=0.3)
-    plt.tight_layout()
-    plt.savefig(os.path.join(plots_dir, 'prediction_distribution.png'), dpi=150)
-    plt.close()
-    
-    # 4. Accuracy vs Energy
-    energy_bins = np.linspace(all_energies.min(), all_energies.max(), 20)
-    bin_centers = (energy_bins[:-1] + energy_bins[1:]) / 2
-    accuracies = []
-    
-    for i in range(len(energy_bins) - 1):
-        mask = (all_energies >= energy_bins[i]) & (all_energies < energy_bins[i + 1])
-        if mask.sum() > 0:
-            acc = (pred_classes[mask] == all_labels[mask]).mean()
-            accuracies.append(acc)
-        else:
-            accuracies.append(np.nan)
-    
-    plt.figure(figsize=(10, 6))
-    plt.plot(bin_centers, accuracies, 'o-', markersize=8, linewidth=2)
-    plt.axhline(y=0.5, color='r', linestyle='--', label='Random (50%)', alpha=0.5)
-    plt.xlabel('Particle Energy (MeV)')
-    plt.ylabel('Accuracy')
-    plt.title('Classification Accuracy vs Particle Energy')
-    plt.legend()
-    plt.grid(alpha=0.3)
-    plt.ylim([0, 1])
-    plt.tight_layout()
-    plt.savefig(os.path.join(plots_dir, 'accuracy_vs_energy.png'), dpi=150)
-    plt.close()
-    
-    # 5. Training History
-    plt.figure(figsize=(12, 5))
-    
-    plt.subplot(1, 2, 1)
-    plt.plot(history.history['loss'], label='Training Loss')
-    plt.plot(history.history['val_loss'], label='Validation Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Loss Evolution')
-    plt.legend()
-    plt.grid(alpha=0.3)
-    
-    plt.subplot(1, 2, 2)
-    plt.plot(history.history['accuracy'], label='Training Accuracy')
-    plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.title('Accuracy Evolution')
-    plt.legend()
-    plt.grid(alpha=0.3)
-    
-    plt.tight_layout()
-    plt.savefig(os.path.join(plots_dir, 'training_history.png'), dpi=150)
-    plt.close()
-    
-    print(f"✓ Plots saved to: {plots_dir}")
-    
-    # Calculate test metrics
-    test_accuracy = (pred_classes == all_labels).mean()
-    
-    print(f"\nTest Set Results:")
-    print(f"  Accuracy: {test_accuracy:.4f}")
-    print(f"  ROC AUC: {roc_auc:.4f}")
-    print(f"  Confusion Matrix:")
-    print(f"    TN={cm[0,0]}, FP={cm[0,1]}")
-    print(f"    FN={cm[1,0]}, TP={cm[1,1]}")
-    
-    print(f"\n✓ Results saved to: {output_dir}")
-    
-    # Save final results with test metrics
+    # Save final results
     results = {
+        'test_loss': float(test_loss),
+        'test_accuracy': float(test_acc),
         'final_val_loss': float(history.history['val_loss'][-1]),
         'final_val_accuracy': float(history.history['val_accuracy'][-1]),
         'best_val_loss': float(min(history.history['val_loss'])),
         'best_val_accuracy': float(max(history.history['val_accuracy'])),
-        'test_accuracy': float(test_accuracy),
-        'test_roc_auc': float(roc_auc),
-        'confusion_matrix': cm.tolist(),
         'config': config
     }
     
     with open(os.path.join(output_dir, 'results.json'), 'w') as f:
         json.dump(results, f, indent=2)
+    
+    print(f"\n✓ Training complete!")
+    print(f"✓ Results saved to: {output_dir}")
     
     return 0
 

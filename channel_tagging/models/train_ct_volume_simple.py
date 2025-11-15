@@ -16,6 +16,16 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 import glob
+from sklearn.metrics import confusion_matrix, classification_report
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, classification_report
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 print("=" * 80)
 print("CHANNEL TAGGING TRAINING - VOLUME IMAGES (SIMPLE CNN)")
@@ -58,13 +68,15 @@ def create_simple_cnn(input_shape=(208, 1242, 1), n_filters=32, n_conv_layers=3,
     
     return model
 
-def load_volume_data(plane='X', max_samples_per_class=25000):
+def load_volume_data(es_directory, cc_directory, plane='X', max_samples_per_class=25000):
     """Load volume images from ES and CC directories."""
     print(f"\nLoading volume images for plane {plane}...")
     print(f"Maximum {max_samples_per_class} samples per class")
+    print(f"ES directory: {es_directory}")
+    print(f"CC directory: {cc_directory}")
     
-    es_pattern = f'/eos/home-e/evilla/dune/sn-tps/production_es/volume_images_fixed_matching/*plane{plane}.npz'
-    cc_pattern = f'/eos/home-e/evilla/dune/sn-tps/production_cc/volume_images_fixed_matching/*plane{plane}.npz'
+    es_pattern = f'{es_directory}*plane{plane}.npz'
+    cc_pattern = f'{cc_directory}*plane{plane}.npz'
     
     es_files = sorted(glob.glob(es_pattern))
     cc_files = sorted(glob.glob(cc_pattern))
@@ -155,15 +167,33 @@ def main():
     print(f"Plane: {args.plane}")
     print(f"Max samples per class: {args.max_samples // 2}")
     
+    # Get directories from config
+    es_directory = config['data']['es_directory']
+    cc_directory = config['data']['cc_directory']
+    plane = config['data']['plane']
+    
+    
+    # Check streaming mode
+    use_streaming = config.get('data', {}).get('use_streaming', False)
+    
+    if use_streaming:
+        print("\n>>> STREAMING MODE: Loading data in batches <<<")
+        # In streaming mode, we load all data but process in smaller chunks during training
+        # This reduces peak memory usage during data loading
+        print("Note: True streaming (incremental loading) not yet implemented")
+        print("Using standard loading for now...")
+    
     # Load data
     images, labels = load_volume_data(
-        plane=args.plane,
+        es_directory=es_directory,
+        cc_directory=cc_directory,
+        plane=plane,
         max_samples_per_class=args.max_samples // 2
     )
     
-    # Split data
+    # Split data: 75% train, 15% val, 10% test
     n = len(images)
-    n_train = int(0.7 * n)
+    n_train = int(0.75 * n)
     n_val = int(0.15 * n)
     
     X_train = images[:n_train]
@@ -211,9 +241,10 @@ def main():
     # Create output directory
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     model_name = config.get('model_name', 'ct_volume_simple')
+    version = config.get('version', 'unknown')
     output_dir = os.path.join(
-        config.get('output_dir', 'training_output/channel_tagging'),
-        model_name,
+        config.get('output', {}).get('base_dir', 'training_output/channel_tagging'),
+        version,
         timestamp
     )
     os.makedirs(output_dir, exist_ok=True)
@@ -237,6 +268,11 @@ def main():
             os.path.join(output_dir, 'best_model.keras'),
             monitor='val_loss',
             save_best_only=True,
+            verbose=1
+        ),
+        keras.callbacks.ModelCheckpoint(
+            os.path.join(output_dir, 'checkpoint_epoch_{epoch:03d}.keras'),
+            save_freq='epoch',
             verbose=1
         ),
         keras.callbacks.CSVLogger(
@@ -263,6 +299,48 @@ def main():
     print(f"\nTest Results:")
     print(f"  Loss: {test_loss:.4f}")
     print(f"  Accuracy: {test_acc:.4f}")
+
+    # Generate predictions for confusion matrix
+    print("\nGenerating predictions and confusion matrix...")
+    y_pred_probs = model.predict(X_test, batch_size=batch_size, verbose=0)
+    y_pred = np.argmax(y_pred_probs, axis=1)
+    y_true = y_test
+    
+    # Save predictions
+    np.savez(
+        os.path.join(output_dir, 'test_predictions.npz'),
+        y_true=y_true,
+        y_pred=y_pred,
+        y_prob=y_pred_probs
+    )
+    
+    # Generate confusion matrix
+    cm = confusion_matrix(y_true, y_pred)
+    class_names = ['ES', 'CC']
+    
+    # Plot confusion matrix
+    fig, ax = plt.subplots(figsize=(8, 7))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', square=True,
+                xticklabels=class_names, yticklabels=class_names,
+                cbar_kws={'label': 'Count'}, ax=ax, annot_kws={'size': 14})
+    ax.set_xlabel('Predicted Label', fontsize=13, fontweight='bold')
+    ax.set_ylabel('True Label', fontsize=13, fontweight='bold')
+    ax.set_title(f'Confusion Matrix - {config.get("version", "CT")}', 
+                 fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, 'confusion_matrix.png'), 
+                dpi=150, bbox_inches='tight')
+    plt.close()
+    
+    # Generate classification report
+    report = classification_report(y_true, y_pred, target_names=class_names)
+    with open(os.path.join(output_dir, 'classification_report.txt'), 'w') as f:
+        f.write(report)
+    
+    print(f"✓ Confusion matrix saved to: {output_dir}/confusion_matrix.png")
+    print(f"✓ Predictions saved to: {output_dir}/test_predictions.npz")
+    print(f"\nClassification Report:")
+    print(report)
     
     # Save final results
     results = {

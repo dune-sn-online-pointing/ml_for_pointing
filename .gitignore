@@ -1,3 +1,6 @@
 **/__pycache__/
 *.cc
 local_packages/
+training_output/
+temp/
+*/logs/*

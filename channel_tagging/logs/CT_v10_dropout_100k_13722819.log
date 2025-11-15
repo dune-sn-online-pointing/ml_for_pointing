@@ -277,3 +277,33 @@
 	10720  -  MemoryUsage of job (MB)
 	10976892  -  ResidentSetSize of job (KB)
 ...
+040 (13722819.000.000) 11/12 19:06:09 Started transferring output files
+...
+040 (13722819.000.000) 11/12 19:06:20 Finished transferring output files
+...
+021 (13722819.000.000) 11/12 19:06:21 Error from starter on slot1_11@b9p13p1868.cern.ch:
+	STARTER at 188.185.192.37 failed to send file(s) to <188.184.90.62:9618>: |Error: sending file /pool/condor/dir_2332417/_condor_stdout: max total download bytes exceeded (max=1024 MB, this file=226661 MB); SHADOW failed to receive file(s) from <188.185.192.37:36391>
+	Code 33 Subcode 0
+...
+004 (13722819.000.000) 11/12 19:06:21 Job was evicted.
+	(0) CPU times
+		Usr 4 16:53:02, Sys 0 01:42:48  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+	1073741824  -  Run Bytes Sent By Job
+	1680  -  Run Bytes Received By Job
+	Error from slot1_11@b9p13p1868.cern.ch: STARTER at 188.185.192.37 failed to send file(s) to <188.184.90.62:9618>: |Error: sending file /pool/condor/dir_2332417/_condor_stdout: max total download bytes exceeded (max=1024 MB, this file=226661 MB); SHADOW failed to receive file(s) from <188.185.192.37:36391>
+	Partitionable Resources :        Usage  Request Allocated 
+	   Cpus                 :         0.98        6         6 
+	   Disk (KB)            : 232101896     5242880   5245683 
+	   GPUs                 :                               0 
+	   Memory (MB)          :     10720       18000     18000 
+	   TimeExecute (s)      :     62816                       
+	   TimeSlotBusy (s)     :     62830                       
+...
+012 (13722819.000.000) 11/12 19:06:22 Job was held.
+	Error from slot1_11@b9p13p1868.cern.ch: STARTER at 188.185.192.37 failed to send file(s) to <188.184.90.62:9618>: |Error: sending file /pool/condor/dir_2332417/_condor_stdout: max total download bytes exceeded (max=1024 MB, this file=226661 MB); SHADOW failed to receive file(s) from <188.185.192.37:36391>
+	Code 33 Subcode 0
+...
+009 (13722819.000.000) 11/12 19:08:16 Job was aborted.
+	Job removed by SYSTEM_PERIODIC_REMOVE due to disk usage exceeded allowed max
+...

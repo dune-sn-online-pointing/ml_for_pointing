@@ -1,5 +1,6 @@
-json/
-condor_stuff/
 **/__pycache__/
-custom_python_libs/
 *.cc
+local_packages/
+training_output/
+temp/
+*/logs/*

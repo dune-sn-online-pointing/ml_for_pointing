@@ -4,7 +4,10 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import matplotlib.pylab as pylab
 import seaborn as sns
-import hyperopt as hp
+try:
+    import hyperopt as hp
+except ImportError:
+    hp = None
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -12,7 +15,10 @@ from mpl_toolkits.axes_grid1 import ImageGrid
 from sklearn.metrics import roc_curve, auc
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from sklearn.preprocessing import label_binarize
-import healpy as healpy
+try:
+    import healpy as healpy
+except ImportError:
+    healpy = None
 
 import general_purpose_libs as gpl
 
@@ -124,14 +130,40 @@ def prepare_data(input_data, input_label, dataset_parameters, output_folder):
     return train, validation, test
 
 def test_model(model, test, output_folder):
-    # Test the model
+    # Test the model and extract labels
+    # Note: We need to extract labels BEFORE model.predict() consumes the dataset
+    print("Extracting test labels...")
+    
+    # Check if test is a tuple (images, labels) or a tf.data.Dataset
+    if isinstance(test, tuple) and len(test) == 2:
+        # Direct tuple of (images, labels) - no iteration needed
+        test_data, test_labels = test
+        print(f"Using tuple format: data shape {test_data.shape}, labels shape {test_labels.shape}")
+    else:
+        # It's a dataset - iterate over batches
+        test_labels = []
+        test_data = []
+        for batch in test:
+            # Robust unpacking for both regular and streaming datasets
+            try:
+                data, labels, _ = batch  # Try 3-tuple (streaming with metadata)
+            except (ValueError, TypeError):
+                try:
+                    data, labels = batch  # Try 2-tuple (regular dataset)
+                except (ValueError, TypeError):
+                    # Single element, assume it's data and no labels
+                    data = batch
+                    labels = None
+            test_data.append(data)
+            if labels is not None:
+                test_labels.append(labels.numpy() if hasattr(labels, "numpy") else labels)
+        test_labels = np.concatenate(test_labels, axis=0)
+        test_data = np.concatenate([d.numpy() if hasattr(d, "numpy") else d for d in test_data], axis=0)
+    
     print("Doing some test...")
-    predictions = model.predict(test)      
+    predictions = model.predict(test_data)      
     # Calculate metrics
     print("Calculating metrics...")
-    # get the test labels from the test dataset
-    test_labels = np.array([label for _, label in test], dtype=object)
-    test_labels = np.concatenate(test_labels, axis=0)
     log_metrics(test_labels, predictions, output_folder=output_folder)
     print("Metrics calculated.")
     print("Drawing model...")
@@ -299,10 +331,9 @@ def save_labels_in_a_map(dataset_label, output_folder, name="map"):
 
     plt.figure(figsize=(10, 10))
     plt.title("Labels map")
-    thetas = np.mod(thetas, 2*np.pi)
-    phis = np.mod(phis, np.pi)
-    # get the indices
-    indices = healpy.ang2pix(nside, phis, thetas)
+    # thetas and phis are already in correct ranges from conversion function
+    # get the indices (healpy.ang2pix expects theta first, then phi)
+    indices = healpy.ang2pix(nside, thetas, phis)
     # fill the map
     for index in indices:
         map_hp[index] += 1
@@ -329,13 +360,18 @@ def save_samples_from_ds(dataset, labels, output_folder, name="img", n_samples=1
     plt.close()
             
 def from_coordinate_to_theta_phi(coords):
-    # nomalize the coordinates
-    coords = coords/np.linalg.norm(coords, axis=1)[:, np.newaxis]
+    # normalize the coordinates
+    norms = np.linalg.norm(coords, axis=1, keepdims=True)
+    # Avoid division by zero - replace zero norms with 1
+    norms = np.where(norms == 0, 1, norms)
+    coords = coords / norms
+    
     x, y, z = coords[:,0], coords[:,1], coords[:,2]
-    r = np.sqrt(x**2 + y**2 + z**2)
-
-    phi = np.arccos(y/r)
-    theta = np.arctan2(z, x)
+    
+    # Healpy convention: theta = polar angle from z-axis [0, pi], phi = azimuthal angle [0, 2*pi]
+    theta = np.arccos(np.clip(z, -1, 1))  # Polar angle from z-axis
+    phi = np.arctan2(y, x)  # Azimuthal angle in x-y plane
+    phi = np.mod(phi, 2*np.pi)  # Ensure phi is in [0, 2*pi]
 
     return np.array([theta, phi]).T
 
@@ -388,4 +424,283 @@ def my_loss_function(y_true, y_pred):
 def my_loss_function_both_dir(y_true, y_pred):
     # the loss accepts two directions, the true and the predicted one
     return tf.reduce_sum(tf.minimum(1 - tf.reduce_sum(y_true * y_pred, axis=-1) / (tf.norm(y_true, axis=-1) * tf.norm(y_pred, axis=-1)), 1 + tf.reduce_sum(y_true * y_pred, axis=-1) / (tf.norm(y_true, axis=-1) * tf.norm(y_pred, axis=-1))), axis=-1)
+
+
+def prepare_data_from_npz_regression(data_dir, plane, dataset_parameters, output_folder):
+    """
+    Prepare data from NPZ batch files for regression (electron direction).
+    Similar to classification version but extracts direction vectors instead of binary labels.
+    
+    Args:
+        data_dir: Directory containing NPZ batch files
+        plane: Plane to use ('U', 'V', or 'X')
+        dataset_parameters: Dictionary with dataset parameters
+        output_folder: Output folder for saving samples and plots
+        
+    Returns:
+        train, validation, test: Tuples of (images, direction_labels)
+    """
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import data_loader as dl
+    import numpy as np
+    
+    train_fraction = dataset_parameters.get("train_fraction", 0.8)
+    val_fraction = dataset_parameters.get("val_fraction", 0.1)
+    test_fraction = dataset_parameters.get("test_fraction", 0.1)
+    max_samples = dataset_parameters.get("max_samples", None)
+    
+    print("\n" + "="*60)
+    print("LOADING DATA FROM NPZ FILES (REGRESSION)")
+    print("="*60)
+    print(f"Data directory: {data_dir}")
+    print(f"Plane: {plane}")
+    print(f"Max samples: {max_samples if max_samples else 'All'}")
+    
+    # Create output folder
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    
+    # Load dataset from NPZ files
+    dataset_img, metadata = dl.load_dataset_from_directory(
+        data_dir=data_dir,
+        plane=plane,
+        max_samples=max_samples,
+        verbose=True
+    )
+    
+    # CRITICAL: Filter for main tracks only (is_main_track=1 in column 1+offset)
+    offset, _ = dl._metadata_layout(metadata.shape[1])
+    is_main_track = metadata[:, 1 + offset].astype(bool)
+    
+    print(f"\nFiltering for main tracks:")
+    print(f"  Total samples: {len(metadata)}")
+    print(f"  Main tracks: {np.sum(is_main_track)} ({100*np.sum(is_main_track)/len(metadata):.1f}%)")
+    print(f"  Background: {np.sum(~is_main_track)} ({100*np.sum(~is_main_track)/len(metadata):.1f}%)")
+    
+    # Apply filter
+    dataset_img = dataset_img[is_main_track]
+    metadata = metadata[is_main_track]
+    
+    print(f"  After filtering: {len(metadata)} main track samples")
+    
+    # Extract direction labels (columns 6-8+offset: px, py, pz, normalized)
+    dataset_label = dl.extract_direction_labels(metadata)
+    
+    print(f"\nDataset shape: {dataset_img.shape}")
+    print(f"Direction labels shape: {dataset_label.shape}")
+    print(f"Direction labels range: [{dataset_label.min():.3f}, {dataset_label.max():.3f}]")
+    
+    # Add channel dimension
+    if len(dataset_img.shape) == 3:
+        dataset_img = np.expand_dims(dataset_img, axis=-1)
+    
+    # Split dataset
+    n_samples = len(dataset_img)
+    n_train = int(n_samples * train_fraction)
+    n_val = int(n_samples * val_fraction)
+    
+    # Shuffle
+    indices = np.random.permutation(n_samples)
+    train_idx = indices[:n_train]
+    val_idx = indices[n_train:n_train+n_val]
+    test_idx = indices[n_train+n_val:]
+    
+    train = (dataset_img[train_idx], dataset_label[train_idx])
+    validation = (dataset_img[val_idx], dataset_label[val_idx])
+    test = (dataset_img[test_idx], dataset_label[test_idx])
+    
+    print(f"\nData split:")
+    print(f"  Train: {len(train[0])} samples, labels shape: {train[1].shape}")
+    print(f"  Val: {len(validation[0])} samples, labels shape: {validation[1].shape}")
+    print(f"  Test: {len(test[0])} samples, labels shape: {test[1].shape}")
+    
+    return train, validation, test
+
+
+def prepare_data_from_npz_3planes(data_dir, dataset_parameters, output_folder):
+    """
+    Prepare data from NPZ batch files for 3-plane regression (electron direction).
+    Loads matched clusters from all three planes (U, V, X) and combines them.
+    Only includes samples where ALL THREE planes have a match at the same index within each batch.
+    
+    Args:
+        data_dir: Directory (or list of directories) containing NPZ batch files
+        dataset_parameters: Dictionary with dataset parameters
+        output_folder: Output folder for saving samples and plots
+        
+    Returns:
+        train, validation, test: Tuples of (dict of plane images, direction_labels)
+            where images is a dict: {'U': array, 'V': array, 'X': array}
+    """
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import data_loader as dl
+    import numpy as np
+    import glob
+    
+    train_fraction = dataset_parameters.get("train_fraction", 0.6)
+    val_fraction = dataset_parameters.get("val_fraction", 0.2)
+    test_fraction = dataset_parameters.get("test_fraction", 0.2)
+    max_samples = dataset_parameters.get("max_samples", None)
+    batch_pattern = dataset_parameters.get("batch_pattern", "*_matched_plane{plane}.npz")
+    shuffle_data = dataset_parameters.get("shuffle_data", True)
+    random_seed = dataset_parameters.get("random_seed", 42)
+    
+    print("\n" + "="*60)
+    print("LOADING DATA FROM NPZ FILES (3-PLANE REGRESSION WITH MATCHING)")
+    print("="*60)
+    print(f"Data directory: {data_dir}")
+    print(f"Batch pattern: {batch_pattern}")
+    print(f"Max samples: {max_samples if max_samples else 'All'}")
+    
+    # Create output folder
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    
+    # Handle single directory or list of directories
+    data_dirs = [data_dir] if isinstance(data_dir, str) else data_dir
+    
+    # Collect all matched batch files
+    print("\nFinding matched batch files...")
+    batch_base_files = []
+    for dir_path in data_dirs:
+        # Find X plane files as reference
+        x_pattern = batch_pattern.replace("{plane}", "X")
+        x_files = sorted(glob.glob(os.path.join(dir_path, x_pattern)))
+        
+        for x_file in x_files:
+            # Derive base filename
+            base_file = x_file.replace("_planeX.npz", "")
+            
+            # Check if corresponding U and V files exist
+            u_file = base_file + "_planeU.npz"
+            v_file = base_file + "_planeV.npz"
+            
+            if os.path.exists(u_file) and os.path.exists(v_file):
+                batch_base_files.append(base_file)
+    
+    print(f"Found {len(batch_base_files)} matched batch files")
+    
+    # Load data from matched batches, keeping only samples with all 3 planes
+    all_images_u = []
+    all_images_v = []
+    all_images_x = []
+    all_labels = []
+    
+    total_samples_loaded = 0
+    total_samples_kept = 0
+    
+    for i, base_file in enumerate(batch_base_files):
+        if i % 100 == 0 and i > 0:
+            print(f"  Processed {i}/{len(batch_base_files)} batches, kept {total_samples_kept}/{total_samples_loaded} samples ({100*total_samples_kept/total_samples_loaded:.1f}%)")
+        
+        # Load all three planes
+        u_data = np.load(base_file + "_planeU.npz", allow_pickle=True)
+        v_data = np.load(base_file + "_planeV.npz", allow_pickle=True)
+        x_data = np.load(base_file + "_planeX.npz", allow_pickle=True)
+        
+        u_imgs = u_data['images']
+        v_imgs = v_data['images']
+        x_imgs = x_data['images']
+        x_metadata = x_data['metadata']
+        
+        # Only keep samples where all three planes have data at that index
+        min_samples = min(len(u_imgs), len(v_imgs), len(x_imgs))
+        
+        total_samples_loaded += max(len(u_imgs), len(v_imgs), len(x_imgs))
+        total_samples_kept += min_samples
+        
+        if min_samples > 0:
+            all_images_u.append(u_imgs[:min_samples])
+            all_images_v.append(v_imgs[:min_samples])
+            all_images_x.append(x_imgs[:min_samples])
+            all_labels.append(x_metadata[:min_samples])
+    
+    print(f"\nFinished loading {len(batch_base_files)} batches")
+    print(f"Total samples loaded: {total_samples_loaded}")
+    print(f"Total samples kept (matched): {total_samples_kept}")
+    print(f"Filtering ratio: {100*total_samples_kept/total_samples_loaded:.1f}%")
+    
+    # Concatenate all batches
+    dataset_img_u = np.concatenate(all_images_u, axis=0)
+    dataset_img_v = np.concatenate(all_images_v, axis=0)
+    dataset_img_x = np.concatenate(all_images_x, axis=0)
+    metadata = np.concatenate(all_labels, axis=0)
+    
+    print(f"\nFinal shapes:")
+    print(f"  U: {dataset_img_u.shape}")
+    print(f"  V: {dataset_img_v.shape}")
+    print(f"  X: {dataset_img_x.shape}")
+    print(f"  Metadata: {metadata.shape}")
+    
+    # Extract direction labels (columns 3-5: x, y, z)
+    dataset_label = dl.extract_direction_labels(metadata)
+    
+    print(f"\nDirection labels shape: {dataset_label.shape}")
+    print(f"Direction labels range: [{dataset_label.min():.3f}, {dataset_label.max():.3f}]")
+    
+    # Add channel dimension to each plane
+    dataset_img_u = dataset_img_u[..., np.newaxis]
+    dataset_img_v = dataset_img_v[..., np.newaxis]
+    dataset_img_x = dataset_img_x[..., np.newaxis]
+    
+    print(f"\nFinal shapes with channel dimension:")
+    print(f"  U: {dataset_img_u.shape}")
+    print(f"  V: {dataset_img_v.shape}")
+    print(f"  X: {dataset_img_x.shape}")
+    
+    # Determine number of samples and splits
+    n_samples = len(dataset_label)
+    
+    # Apply max_samples limit if specified
+    if max_samples is not None and n_samples > max_samples:
+        print(f"\nLimiting dataset to {max_samples} samples (from {n_samples})")
+        dataset_img_u = dataset_img_u[:max_samples]
+        dataset_img_v = dataset_img_v[:max_samples]
+        dataset_img_x = dataset_img_x[:max_samples]
+        dataset_label = dataset_label[:max_samples]
+        n_samples = max_samples
+    
+    n_train = int(n_samples * train_fraction)
+    n_val = int(n_samples * val_fraction)
+    
+    # Shuffle
+    if shuffle_data:
+        np.random.seed(random_seed)
+        indices = np.random.permutation(n_samples)
+    else:
+        indices = np.arange(n_samples)
+    
+    train_idx = indices[:n_train]
+    val_idx = indices[n_train:n_train+n_val]
+    test_idx = indices[n_train+n_val:]
+    
+    # Create train/val/test splits for each plane
+    train_imgs = {
+        'U': dataset_img_u[train_idx],
+        'V': dataset_img_v[train_idx],
+        'X': dataset_img_x[train_idx]
+    }
+    val_imgs = {
+        'U': dataset_img_u[val_idx],
+        'V': dataset_img_v[val_idx],
+        'X': dataset_img_x[val_idx]
+    }
+    test_imgs = {
+        'U': dataset_img_u[test_idx],
+        'V': dataset_img_v[test_idx],
+        'X': dataset_img_x[test_idx]
+    }
+    
+    train = (train_imgs, dataset_label[train_idx])
+    validation = (val_imgs, dataset_label[val_idx])
+    test = (test_imgs, dataset_label[test_idx])
+    
+    print(f"\nData split:")
+    print(f"  Train: {len(train[1])} samples")
+    print(f"  Validation: {len(validation[1])} samples")
+    print(f"  Test: {len(test[1])} samples")
+    
+    return train, validation, test
 

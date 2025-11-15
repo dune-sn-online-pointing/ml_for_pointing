@@ -4,7 +4,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pylab
 import seaborn as sns
-import hyperopt as hp
+try:
+    import hyperopt as hp
+except ImportError:
+    hp = None
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -13,7 +16,7 @@ sys.path.append("../../python/")
 import general_purpose_libs as gpl
 import regression_libs as rl
 
-def build_model(buid_parameters, train, validation, output_folder, input_shape):
+def build_model(buid_parameters, train, validation, output_folder, input_shape, epochs=200, batch_size=32):
     
     model = tf.keras.Sequential()
     model.add(tf.keras.layers.Conv2D(buid_parameters['n_filters'], (buid_parameters['kernel_size'], 1), activation='relu', input_shape=input_shape))
@@ -48,9 +51,10 @@ def build_model(buid_parameters, train, validation, output_folder, input_shape):
             verbose=1)
     ]    
 
-    history = model.fit(train, 
-                        epochs=200, 
-                        validation_data=validation, 
+    history = model.fit(train[0], train[1], 
+                        batch_size=batch_size,
+                        epochs=epochs, 
+                        validation_data=(validation[0], validation[1]), 
                         callbacks=callbacks,
                         verbose=1)
 
@@ -58,9 +62,10 @@ def build_model(buid_parameters, train, validation, output_folder, input_shape):
 
 def create_and_train_model(model_parameters, train, validation, output_folder, model_name):
     input_shape = model_parameters['input_shape']
-    build_parameters = model_parameters['build_parameters'] 
-    model, history = build_model(build_parameters, train, validation, output_folder, input_shape)
-
+    # Use model_parameters directly as build_parameters for backward compatibility
+    build_parameters = model_parameters.get('build_parameters', model_parameters)
+    model, history = build_model(build_parameters, train, validation, output_folder, input_shape, epochs=model_parameters.get("epochs", 200), batch_size=model_parameters.get("batch_size", 32))
+    
     return model, history
 
 

@@ -1,0 +1,3 @@
+[submodule "online-pointing-utils"]
+	path = online-pointing-utils
+	url = https://github.com/dune-sn-online-pointing/online-pointing-utils.git

@@ -34,7 +34,11 @@ def load_results(results_dir):
         results = json.load(f)
     
     if pred_path.exists():
-        predictions = np.load(pred_path)
+        with np.load(pred_path, allow_pickle=True) as data:
+            preds = {k: data[k] for k in data.files}
+        if 'true_labels' not in preds and 'labels' in preds:
+            preds['true_labels'] = preds['labels']
+        predictions = preds
     else:
         predictions = None
     
@@ -218,7 +222,13 @@ def plot_prediction_distribution(predictions, fig):
 
 def plot_training_history(results, fig):
     """Page 3: Training history analysis."""
-    history = results['history']
+    history = results.get('history') or {}
+    if not history or 'loss' not in history or 'val_loss' not in history:
+        ax = fig.add_subplot(111)
+        ax.text(0.5, 0.5, 'Training history not available',
+                ha='center', va='center', fontsize=14)
+        ax.axis('off')
+        return
     
     # Filter out NaN values
     epochs_loss = [i+1 for i, x in enumerate(history['loss']) if not (isinstance(x, float) and np.isnan(x))]

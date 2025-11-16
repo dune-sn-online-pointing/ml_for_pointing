@@ -304,7 +304,7 @@ def main():
     print("STEP 4: MODEL EVALUATION")
     print("="*70)
     
-    cl.test_model(
+    evaluation = cl.test_model(
         model,
         test,
         output_folder,
@@ -312,6 +312,35 @@ def main():
     )
     
     print("\n✓ Model evaluation completed")
+
+    history_dict = gpl.history_to_serializable(history)
+    results_payload = {
+        "config": {
+            "model": {
+                "name": model_name
+            },
+            "task_label": config.get("task_label", "mt_identifier"),
+            "dataset": {
+                "plane": args.plane,
+                "train_fraction": dataset_parameters.get("train_fraction"),
+                "val_fraction": dataset_parameters.get("val_fraction"),
+                "test_fraction": dataset_parameters.get("test_fraction"),
+                "balance_data": dataset_parameters.get("balance_data", False),
+                "max_samples": dataset_parameters.get("max_samples"),
+                "data_directories": data_dirs
+            },
+            "training": {
+                "epochs": model_parameters.get("epochs"),
+                "batch_size": model_parameters.get("batch_size"),
+                "learning_rate": model_parameters.get("learning_rate"),
+                "decay_rate": model_parameters.get("decay_rate")
+            }
+        },
+        "metrics": evaluation.get("metrics", {}),
+        "history": history_dict,
+        "artifacts": evaluation.get("artifacts", {})
+    }
+    gpl.write_results_json(output_folder, results_payload)
     
     # Create final report
     print("\n" + "="*70)

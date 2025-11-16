@@ -288,18 +288,40 @@ def main():
     # Check if evaluation already exists
     architecture_path = os.path.join(output_folder, "architecture.png")
     map_true_path = os.path.join(output_folder, "map_true.png")
+    results_path = os.path.join(output_folder, "results.json")
     
-    if os.path.exists(architecture_path) and os.path.exists(map_true_path):
-        print("⚠ Evaluation files already exist. Skipping test...")
-        print(f"  Found: {architecture_path}")
-        print(f"  Found: {map_true_path}")
-    else:
+    need_results = not os.path.exists(results_path)
+    need_evaluation = need_results or not (os.path.exists(architecture_path) and os.path.exists(map_true_path))
+    
+    evaluation = None
+    if need_evaluation:
         # Test the regression model using regression libs
-        rl.test_model(
+        evaluation = rl.test_model(
             model,
             test,
             output_folder
         )
+    else:
+        print("⚠ Evaluation files already exist. Skipping test...")
+        print(f"  Found: {architecture_path}")
+        print(f"  Found: {map_true_path}")
+        if not need_results:
+            print(f"  Found: {results_path}")
+    
+    if evaluation is not None:
+        history_dict = gpl.history_to_serializable(history)
+        results_payload = {
+            "config": {
+                "model": config.get("model", {}),
+                "task_label": config.get("task_label", "electron_direction"),
+                "data": config.get("data", {}),
+                "training": config.get("training", {})
+            },
+            "metrics": evaluation.get("metrics", {}),
+            "history": history_dict,
+            "artifacts": evaluation.get("artifacts", {})
+        }
+        gpl.write_results_json(output_folder, results_payload)
     
     print("\n✓ Model evaluation completed")
     

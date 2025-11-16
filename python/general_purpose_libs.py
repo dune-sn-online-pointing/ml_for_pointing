@@ -75,16 +75,74 @@ def save_sample_img(ds_item, output_folder, img_name):
         plt.close()
 
 def save_history(history, output_folder):
-    # Save the history
-    with open(output_folder+"history.txt", "w") as f:
-        f.write(str(history.history))
-    # Plot the history
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('Model loss')
-    plt.ylabel('Loss')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Validation'], loc='upper left')
-    plt.savefig(output_folder+'loss.png')
-    plt.close()
+    """Persist training history in both human-readable and structured formats."""
+    if history is None:
+        return
+
+    os.makedirs(output_folder, exist_ok=True)
+
+    if hasattr(history, 'history'):
+        raw_history = history.history
+    elif isinstance(history, dict):
+        raw_history = history
+    else:
+        return
+
+    history_dict = {k: [float(v) for v in values] for k, values in raw_history.items()}
+
+    text_path = os.path.join(output_folder, "history.txt")
+    with open(text_path, "w") as f:
+        json.dump(history_dict, f, indent=2)
+
+    json_path = os.path.join(output_folder, "training_history.json")
+    with open(json_path, "w") as f:
+        json.dump(history_dict, f, indent=2)
+
+    def _plot_metric(metric_key, ylabel, filename):
+        train_values = history_dict.get(metric_key)
+        val_values = history_dict.get(f"val_{metric_key}")
+        if not train_values:
+            return
+        plt.figure()
+        plt.plot(train_values, label=metric_key)
+        if val_values:
+            plt.plot(val_values, label=f"val_{metric_key}")
+        plt.title(f"Model {metric_key}")
+        plt.ylabel(ylabel)
+        plt.xlabel('Epoch')
+        plt.legend(loc='upper left')
+        plt.savefig(os.path.join(output_folder, filename))
+        plt.close()
+
+    _plot_metric('loss', 'Loss', 'loss.png')
+    if 'accuracy' in history_dict or 'acc' in history_dict:
+        metric_name = 'accuracy' if 'accuracy' in history_dict else 'acc'
+        _plot_metric(metric_name, 'Accuracy', 'accuracy.png')
+
+
+def history_to_serializable(history):
+    """Return a JSON-serializable history dictionary."""
+    if history is None:
+        return {}
+    if hasattr(history, 'history'):
+        source = history.history
+    elif isinstance(history, dict):
+        source = history
+    else:
+        return {}
+    serializable = {}
+    for key, values in source.items():
+        serializable[key] = [float(v) for v in values]
+    return serializable
+
+
+def write_results_json(output_folder, payload):
+    """Persist a results.json file and return its path."""
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder, exist_ok=True)
+    results_path = os.path.join(output_folder, 'results.json')
+    with open(results_path, 'w') as f:
+        json.dump(payload, f, indent=2)
+    print(f"✓ Results saved to: {results_path}")
+    return results_path
 

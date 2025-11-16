@@ -15,7 +15,7 @@ PROJECT_DIR="/afs/cern.ch/work/e/evilla/private/dune/refactor_ml"
 cd "$PROJECT_DIR"
 source "$PROJECT_DIR/scripts/init.sh"
 
-nvidia-smi 2>/dev/null || echo "No GPU available"
+nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader 2>&1 || echo "No GPU available"
 
 echo "Starting MT training..."
 python3 mt_identifier/models/mt_training.py --input_json "$JSON_CONFIG"

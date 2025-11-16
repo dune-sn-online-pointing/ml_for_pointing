@@ -193,60 +193,50 @@ def plot_training_history(results, fig):
         ax2.axis('off')
 
 
+def _plot_hist2d(ax, x, y, x_range, y_range, bins=60, cmap='YlOrRd'):
+    """Utility to render a log-friendly 2D histogram with colorbar."""
+    h, xedges, yedges = np.histogram2d(x, y, bins=bins, range=[x_range, y_range])
+    mesh = ax.pcolormesh(xedges, yedges, h.T, cmap=cmap)
+    return mesh
+
+
 def plot_component_correlations(predictions, fig):
     """Page 3: Component-wise correlation analysis using 2D histograms."""
     pred = predictions['predictions']
     true = predictions['true_directions']
-    errors = predictions['angular_errors']
     
     gs = gridspec.GridSpec(2, 3, figure=fig, hspace=0.35, wspace=0.35)
-    
     components = ['X', 'Y', 'Z']
+    
     for idx, comp in enumerate(components):
-        # 2D histogram for correlation
         ax = fig.add_subplot(gs[0, idx])
-        
-        # Create 2D histogram
-        bins = 60
-        h = ax.hist2d(true[:, idx], pred[:, idx], bins=bins, 
-                     range=[[-1.05, 1.05], [-1.05, 1.05]], cmap='YlOrRd', cmin=1)
-        
-        # Perfect prediction line
-        ax.plot([-1, 1], [-1, 1], 'r--', linewidth=2.5, 
-               label='Perfect', alpha=0.8, zorder=10)
-        
-        # Flipped line
-        ax.plot([-1, 1], [1, -1], 'gray', linestyle=':', 
-               linewidth=2, label='Flipped', alpha=0.6, zorder=10)
-        
+        mesh = _plot_hist2d(ax, true[:, idx], pred[:, idx], [-1.05, 1.05], [-1.05, 1.05])
+        ax.plot([-1, 1], [-1, 1], 'r--', linewidth=2.0, label='Perfect', alpha=0.8)
+        ax.plot([-1, 1], [1, -1], 'gray', linestyle=':', linewidth=1.5, label='Flipped', alpha=0.6)
         ax.set_xlabel(f'True {comp}', fontsize=11, fontweight='bold')
         ax.set_ylabel(f'Predicted {comp}', fontsize=11, fontweight='bold')
         ax.set_title(f'{comp} Component Correlation', fontsize=12, fontweight='bold')
         ax.legend(fontsize=9, loc='upper left')
-        ax.grid(alpha=0.3, linestyle=':', linewidth=0.5)
         ax.set_xlim(-1.05, 1.05)
         ax.set_ylim(-1.05, 1.05)
         ax.set_aspect('equal')
-        
-        # Add colorbar
+        ax.grid(alpha=0.15, linestyle=':')
         if idx == 2:
-            cbar = plt.colorbar(h[3], ax=ax)
+            cbar = plt.colorbar(mesh, ax=ax)
             cbar.set_label('Count', fontsize=10, fontweight='bold')
         
-        # Residual plot - also 2D histogram
         ax_res = fig.add_subplot(gs[1, idx])
         residuals = pred[:, idx] - true[:, idx]
-        
-        # 2D histogram for residuals
-        h_res = ax_res.hist2d(true[:, idx], residuals, bins=[bins, 50],
-                             range=[[-1.05, 1.05], [-2, 2]], cmap='YlOrRd', cmin=1)
-        
-        ax_res.axhline(0, color='r', linestyle='--', linewidth=2, alpha=0.7)
+        mesh_res = _plot_hist2d(ax_res, true[:, idx], residuals, [-1.05, 1.05], [-2, 2], bins=[60, 60])
+        ax_res.axhline(0, color='r', linestyle='--', linewidth=1.5, alpha=0.7)
         ax_res.set_xlabel(f'True {comp}', fontsize=11, fontweight='bold')
-        ax_res.set_ylabel(f'Residual', fontsize=11, fontweight='bold')
+        ax_res.set_ylabel('Residual', fontsize=11, fontweight='bold')
         ax_res.set_title(f'{comp} Residuals', fontsize=12, fontweight='bold')
         ax_res.set_xlim(-1.05, 1.05)
-        ax_res.grid(alpha=0.3, linestyle=':', linewidth=0.5)
+        ax_res.grid(alpha=0.15, linestyle=':')
+        if idx == 2:
+            cbar_res = plt.colorbar(mesh_res, ax=ax_res)
+            cbar_res.set_label('Count', fontsize=10, fontweight='bold')
 
 
 
@@ -279,17 +269,15 @@ def plot_energy_analysis(predictions, fig):
     
     # Plot 1: Error vs energy 2D histogram
     ax1 = fig.add_subplot(gs[0, 0])
-    
-    # 2D histogram
-    energy_bins_2d = np.linspace(energies_valid.min(), energies_valid.max(), 50)
-    error_bins_2d = np.linspace(0, np.percentile(errors_valid, 99), 50)
-    h1 = ax1.hist2d(energies_valid, errors_valid, bins=[energy_bins_2d, error_bins_2d],
-                   cmap='YlOrRd', cmin=1)
-    plt.colorbar(h1[3], ax=ax1, label='Count')
+    energy_bins_2d = np.linspace(energies_valid.min(), energies_valid.max(), 60)
+    error_bins_2d = np.linspace(0, np.percentile(errors_valid, 99), 60)
+    hist, xedges, yedges = np.histogram2d(energies_valid, errors_valid, bins=[energy_bins_2d, error_bins_2d])
+    mesh = ax1.pcolormesh(xedges, yedges, hist.T, cmap='YlOrRd')
+    plt.colorbar(mesh, ax=ax1, label='Count')
     ax1.set_xlabel('Particle Energy (MeV)', fontsize=12, fontweight='bold')
     ax1.set_ylabel('Angular Error (degrees)', fontsize=12, fontweight='bold')
-    ax1.set_title('Angular Error vs Energy', fontsize=14, fontweight='bold')
-    ax1.grid(alpha=0.3)
+    ax1.set_title('Angular Error vs Energy (2D Histogram)', fontsize=14, fontweight='bold')
+    ax1.grid(alpha=0.15)
     
     # Plot 2: Mean error in energy bins
     ax2 = fig.add_subplot(gs[0, 1])
@@ -352,93 +340,44 @@ def plot_energy_analysis(predictions, fig):
 
 
 def plot_cosine_similarity_analysis(predictions, fig):
-    """Page 5: Cosine similarity analysis with component breakdown."""
+    """Page 5: Cosine similarity analysis with streamlined visuals."""
     pred = predictions['predictions']
     true = predictions['true_directions']
-    errors = predictions['angular_errors']
     
-    # Calculate cosine similarity
     cosine_sim = np.sum(pred * true, axis=1)
-    
-    # Statistics
-    q68_cosine = np.percentile(np.sort(cosine_sim)[::-1], 32)  # 68% from top
+    q68_cosine = np.percentile(np.sort(cosine_sim)[::-1], 32)
     mean_cosine = np.mean(cosine_sim)
     n_positive = np.sum(cosine_sim > 0)
     n_negative = np.sum(cosine_sim < 0)
     n_flipped = np.sum(cosine_sim < -0.5)
     
-    gs = gridspec.GridSpec(2, 3, figure=fig, hspace=0.35, wspace=0.35)
-    
-    # Plot 1: Cosine distribution
-    ax1 = fig.add_subplot(gs[0, :2])
-    ax1.hist(cosine_sim, bins=100, alpha=0.7, edgecolor='black', color='steelblue', range=(-1, 1))
+    gs = gridspec.GridSpec(1, 2, figure=fig, wspace=0.25)
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax1.hist(cosine_sim, bins=100, alpha=0.75, edgecolor='black', color='steelblue', range=(-1, 1))
     ax1.axvline(0, color='red', linestyle='--', linewidth=2, label='cos=0 (90°)', alpha=0.7)
-    ax1.axvline(mean_cosine, color='blue', linestyle='--', linewidth=2, 
-               label=f'Mean: {mean_cosine:.3f}', alpha=0.7)
-    ax1.axvline(q68_cosine, color='green', linestyle=':', linewidth=3,
-               label=f'68% quantile: {q68_cosine:.3f}', alpha=0.9)
+    ax1.axvline(mean_cosine, color='blue', linestyle='--', linewidth=2, label=f'Mean: {mean_cosine:.3f}', alpha=0.7)
+    ax1.axvline(q68_cosine, color='green', linestyle=':', linewidth=3, label=f'68% quantile: {q68_cosine:.3f}', alpha=0.9)
     ax1.set_xlabel('Cosine Similarity (True · Predicted)', fontsize=12, fontweight='bold')
     ax1.set_ylabel('Count', fontsize=12, fontweight='bold')
     ax1.set_title('Cosine Similarity Distribution', fontsize=14, fontweight='bold')
     ax1.legend(fontsize=10)
-    ax1.grid(alpha=0.3)
+    ax1.grid(alpha=0.25)
     
-    # Plot 2: Statistics text
-    ax2 = fig.add_subplot(gs[0, 2])
+    ax2 = fig.add_subplot(gs[0, 1])
     ax2.axis('off')
     stats_text = f"""COSINE STATS
 
 Total: {len(cosine_sim):,}
 
-Positive: {n_positive:,}
-({100*n_positive/len(cosine_sim):.1f}%)
-
-Negative: {n_negative:,}
-({100*n_negative/len(cosine_sim):.1f}%)
-
-Flipped: {n_flipped:,}
-({100*n_flipped/len(cosine_sim):.1f}%)
+Positive: {n_positive:,} ({100*n_positive/len(cosine_sim):.1f}%)
+Negative: {n_negative:,} ({100*n_negative/len(cosine_sim):.1f}%)
+Flipped (<-0.5): {n_flipped:,} ({100*n_flipped/len(cosine_sim):.1f}%)
 
 Mean: {mean_cosine:.3f}
 68%:  {q68_cosine:.3f}"""
-    ax2.text(0.05, 0.95, stats_text, transform=ax2.transAxes, fontsize=10,
-            verticalalignment='top', fontfamily='monospace',
-            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8, pad=0.6))
-    
-    # Plot 3: Cosine vs angular error
-    ax3 = fig.add_subplot(gs[1, 0])
-    scatter = ax3.scatter(cosine_sim, errors, alpha=0.3, s=10, c=errors, cmap='viridis',
-                         vmin=0, vmax=np.percentile(errors, 95))
-    ax3.set_xlabel('Cosine Similarity', fontsize=11, fontweight='bold')
-    ax3.set_ylabel('Angular Error (degrees)', fontsize=11, fontweight='bold')
-    ax3.set_title('Cosine vs Angular Error', fontsize=12, fontweight='bold')
-    ax3.grid(alpha=0.3)
-    ax3.axvline(0, color='red', linestyle='--', alpha=0.5)
-    ax3.axhline(90, color='red', linestyle='--', alpha=0.5)
-    
-    # Plot 4 & 5: Good vs bad predictions spatial distribution (2D projection)
-    good_mask = errors < 45
-    bad_mask = errors > 135
-    
-    ax4 = fig.add_subplot(gs[1, 1])
-    ax4.scatter(cosine_sim[good_mask], errors[good_mask], alpha=0.5, s=20, 
-               color='green', label=f'Good (<45°): {np.sum(good_mask)}')
-    ax4.scatter(cosine_sim[bad_mask], errors[bad_mask], alpha=0.5, s=20, 
-               color='red', label=f'Bad (>135°): {np.sum(bad_mask)}')
-    ax4.set_xlabel('Cosine Similarity', fontsize=11, fontweight='bold')
-    ax4.set_ylabel('Angular Error (degrees)', fontsize=11, fontweight='bold')
-    ax4.set_title('Good vs Bad Predictions', fontsize=12, fontweight='bold')
-    ax4.legend(fontsize=9)
-    ax4.grid(alpha=0.3)
-    
-    # Plot 6: 2D cosine-error density
-    ax5 = fig.add_subplot(gs[1, 2])
-    h = ax5.hist2d(cosine_sim, errors, bins=50, cmap='viridis', 
-                  range=[[-1, 1], [0, 180]])
-    plt.colorbar(h[3], ax=ax5, label='Count')
-    ax5.set_xlabel('Cosine Similarity', fontsize=11, fontweight='bold')
-    ax5.set_ylabel('Angular Error (degrees)', fontsize=11, fontweight='bold')
-    ax5.set_title('2D Distribution', fontsize=12, fontweight='bold')
+    ax2.text(0.05, 0.95, stats_text, transform=ax2.transAxes, fontsize=11,
+             verticalalignment='top', fontfamily='monospace',
+             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.85, pad=0.7))
 
 
 def plot_best_worst_predictions(predictions, fig):

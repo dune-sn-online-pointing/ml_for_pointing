@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.gridspec as gridspec
 import json
+import csv
 import argparse
 import os
 import sys
@@ -86,6 +87,17 @@ def calculate_metrics(y_true, y_pred, y_prob, n_classes=7):
     try:
         from sklearn.preprocessing import label_binarize
         y_true_bin = label_binarize(y_true, classes=range(n_classes))
+
+        # label_binarize returns only one column for binary tasks, but the
+        # downstream plots expect one column per class. Expand the negative
+        # class explicitly so the arrays always have shape (N, n_classes).
+        if y_true_bin.shape[1] != n_classes:
+            if n_classes == 2 and y_true_bin.shape[1] == 1:
+                y_true_bin = np.hstack([1 - y_true_bin, y_true_bin])
+            else:
+                raise ValueError(
+                    f"Unexpected binarized shape {y_true_bin.shape} for {n_classes} classes"
+                )
         auc_per_class = []
         for i in range(n_classes):
             if len(np.unique(y_true_bin[:, i])) > 1:
@@ -289,6 +301,13 @@ def plot_roc_curves(predictions, fig):
     from sklearn.metrics import roc_curve, auc
     
     y_true_bin = label_binarize(y_true, classes=range(n_classes))
+    if y_true_bin.shape[1] != n_classes:
+        if n_classes == 2 and y_true_bin.shape[1] == 1:
+            y_true_bin = np.hstack([1 - y_true_bin, y_true_bin])
+        else:
+            raise ValueError(
+                f"Unexpected binarized shape {y_true_bin.shape} for {n_classes} classes"
+            )
     
     # Calculate ROC for each class
     fpr = {}
@@ -701,6 +720,28 @@ def generate_comprehensive_analysis(results_dir, output_pdf=None):
     # Load results
     print("📊 Loading results...")
     results, predictions = load_results(results_dir)
+    results_path = Path(results_dir)
+
+    # Older trainings stored history only in CSV form. Load it if missing so the
+    # training history plots can still be generated.
+    if 'history' not in results:
+        csv_path = results_path / 'training_history.csv'
+        if csv_path.exists():
+            history = {}
+            with open(csv_path, 'r') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    for key, value in row.items():
+                        if not key or key.strip().lower() == 'epoch':
+                            continue
+                        key = key.strip()
+                        history.setdefault(key, [])
+                        try:
+                            history[key].append(float(value))
+                        except (TypeError, ValueError):
+                            history[key].append(np.nan)
+            if history:
+                results['history'] = history
     
     if predictions is None:
         print("❌ No predictions found. Run training with save_predictions=True")
@@ -713,7 +754,7 @@ def generate_comprehensive_analysis(results_dir, output_pdf=None):
     
     # Determine output path
     if output_pdf is None:
-        output_pdf = Path(results_dir) / f"{model_name}_comprehensive_analysis.pdf"
+        output_pdf = results_path / f"{model_name}_comprehensive_analysis.pdf"
     else:
         output_pdf = Path(output_pdf)
     

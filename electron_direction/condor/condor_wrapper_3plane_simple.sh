@@ -43,7 +43,7 @@ echo ""
 
 # Check GPU availability
 echo "GPU Information:"
-nvidia-smi 2>/dev/null || echo "No GPU available (CPU-only training)"
+nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader 2>&1 || echo "No GPU available (CPU-only training)"
 echo ""
 
 cd "$PROJECT_DIR"

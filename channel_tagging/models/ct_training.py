@@ -308,18 +308,54 @@ def main():
     confusion_matrix_path = os.path.join(output_folder, "confusion_matrix.png")
     architecture_path = os.path.join(output_folder, "architecture.png")
     
-    if os.path.exists(confusion_matrix_path) and os.path.exists(architecture_path):
-        print("⚠ Evaluation files already exist. Skipping test...")
-        print(f"  Found: {confusion_matrix_path}")
-        print(f"  Found: {architecture_path}")
-    else:
-        cl.test_model(
+    results_path = os.path.join(output_folder, "results.json")
+    need_results = not os.path.exists(results_path)
+    need_evaluation = need_results or not (os.path.exists(confusion_matrix_path) and os.path.exists(architecture_path))
+
+    evaluation = None
+    if need_evaluation:
+        evaluation = cl.test_model(
             model,
             test,
             output_folder,
             label_names=["Background", "Channel Tagging"]
         )
+    else:
+        print("⚠ Evaluation artifacts already exist. Skipping test...")
+        print(f"  Found: {confusion_matrix_path}")
+        print(f"  Found: {architecture_path}")
+        if not need_results:
+            print(f"  Found: {results_path}")
     
+    if evaluation is not None:
+        history_dict = gpl.history_to_serializable(history)
+        results_payload = {
+            "config": {
+                "model": {"name": model_name},
+                "task_label": config.get("task_label", "channel_tagging"),
+                "dataset": {
+                    "plane": args.plane,
+                    "train_fraction": dataset_parameters.get("train_fraction"),
+                    "val_fraction": dataset_parameters.get("val_fraction"),
+                    "test_fraction": dataset_parameters.get("test_fraction"),
+                    "balance_data": dataset_parameters.get("balance_data", False),
+                    "max_samples": dataset_parameters.get("max_samples"),
+                    "data_directories": data_dirs,
+                    "use_streaming": use_streaming
+                },
+                "training": {
+                    "epochs": model_parameters.get("epochs"),
+                    "batch_size": model_parameters.get("batch_size"),
+                    "learning_rate": model_parameters.get("learning_rate"),
+                    "optimizer": model_parameters.get("optimizer", "adam")
+                }
+            },
+            "metrics": evaluation.get("metrics", {}),
+            "history": history_dict,
+            "artifacts": evaluation.get("artifacts", {})
+        }
+        gpl.write_results_json(output_folder, results_payload)
+
     print("\n✓ Model evaluation completed")
     
     # Create final report

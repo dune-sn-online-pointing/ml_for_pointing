@@ -23,6 +23,38 @@ except ImportError:
 import general_purpose_libs as gpl
 
 
+def compute_direction_metrics(true_dirs, pred_dirs):
+    """Compute angular error statistics between true and predicted directions."""
+    if true_dirs.shape != pred_dirs.shape:
+        raise ValueError("Prediction and label shapes do not match for metric computation")
+
+    def _normalize(vectors):
+        norms = np.linalg.norm(vectors, axis=1, keepdims=True)
+        norms = np.where(norms == 0, 1, norms)
+        return vectors / norms
+
+    true_unit = _normalize(true_dirs)
+    pred_unit = _normalize(pred_dirs)
+    cosine = np.clip(np.sum(true_unit * pred_unit, axis=1), -1.0, 1.0)
+    angular_errors = np.degrees(np.arccos(cosine))
+
+    metrics = {
+        "angular_error_mean": float(np.mean(angular_errors)),
+        "angular_error_median": float(np.median(angular_errors)),
+        "angular_error_std": float(np.std(angular_errors)),
+        "angular_error_25th": float(np.percentile(angular_errors, 25)),
+        "angular_error_68th": float(np.percentile(angular_errors, 68)),
+        "angular_error_75th": float(np.percentile(angular_errors, 75)),
+        "angular_error_90th": float(np.percentile(angular_errors, 90)),
+        "angular_error_95th": float(np.percentile(angular_errors, 95)),
+        "angular_error_max": float(np.max(angular_errors)),
+        "angular_error_min": float(np.min(angular_errors)),
+        "cosine_mean": float(np.mean(cosine)),
+        "num_samples": int(len(angular_errors))
+    }
+    return metrics, angular_errors
+
+
 def prepare_data(input_data, input_label, dataset_parameters, output_folder):
     # Load the data
     remove_y_direction = dataset_parameters["remove_y_direction"]
@@ -133,43 +165,86 @@ def test_model(model, test, output_folder):
     # Test the model and extract labels
     # Note: We need to extract labels BEFORE model.predict() consumes the dataset
     print("Extracting test labels...")
-    
-    # Check if test is a tuple (images, labels) or a tf.data.Dataset
-    if isinstance(test, tuple) and len(test) == 2:
-        # Direct tuple of (images, labels) - no iteration needed
-        test_data, test_labels = test
-        print(f"Using tuple format: data shape {test_data.shape}, labels shape {test_labels.shape}")
-    else:
-        # It's a dataset - iterate over batches
-        test_labels = []
-        test_data = []
-        for batch in test:
-            # Robust unpacking for both regular and streaming datasets
+
+    output_folder = output_folder if output_folder.endswith(os.sep) else output_folder + os.sep
+
+    def _gather_dataset(dataset):
+        data_buffers = None
+        labels_buffer = []
+        for batch in dataset:
             try:
-                data, labels, _ = batch  # Try 3-tuple (streaming with metadata)
+                data, labels, _ = batch
             except (ValueError, TypeError):
                 try:
-                    data, labels = batch  # Try 2-tuple (regular dataset)
+                    data, labels = batch
                 except (ValueError, TypeError):
-                    # Single element, assume it's data and no labels
                     data = batch
                     labels = None
-            test_data.append(data)
+            if isinstance(data, (list, tuple)):
+                if data_buffers is None:
+                    data_buffers = [[] for _ in range(len(data))]
+                for idx, component in enumerate(data):
+                    data_buffers[idx].append(component.numpy() if hasattr(component, "numpy") else component)
+            else:
+                if data_buffers is None:
+                    data_buffers = []
+                data_buffers.append(data.numpy() if hasattr(data, "numpy") else data)
             if labels is not None:
-                test_labels.append(labels.numpy() if hasattr(labels, "numpy") else labels)
-        test_labels = np.concatenate(test_labels, axis=0)
-        test_data = np.concatenate([d.numpy() if hasattr(d, "numpy") else d for d in test_data], axis=0)
-    
+                labels_buffer.append(labels.numpy() if hasattr(labels, "numpy") else labels)
+        if isinstance(data_buffers, list) and data_buffers and isinstance(data_buffers[0], list):
+            test_inputs = [np.concatenate(buf, axis=0) for buf in data_buffers]
+        else:
+            test_inputs = np.concatenate(data_buffers, axis=0)
+        test_labels = np.concatenate(labels_buffer, axis=0) if labels_buffer else None
+        return test_inputs, test_labels
+
+    if isinstance(test, tuple) and len(test) >= 2:
+        test_data = test[0]
+        test_labels = test[1]
+        print(f"Using tuple format: data shape {test_data.shape if isinstance(test_data, np.ndarray) else 'multi-input'}, labels shape {test_labels.shape}")
+    else:
+        test_data, test_labels = _gather_dataset(test)
+
+    if test_labels is None:
+        raise ValueError("Test labels are required for regression evaluation")
+
     print("Doing some test...")
-    predictions = model.predict(test_data)      
+    predictions = model.predict(test_data)
     # Calculate metrics
     print("Calculating metrics...")
+    metrics, angular_errors = compute_direction_metrics(test_labels, predictions)
     log_metrics(test_labels, predictions, output_folder=output_folder)
     print("Metrics calculated.")
     print("Drawing model...")
     keras.utils.plot_model(model, output_folder+"architecture.png", show_shapes=True)
     print("Model drawn.")
+
+    predictions_path = output_folder + "predictions.npy"
+    labels_path = output_folder + "test_labels.npy"
+    val_predictions_path = output_folder + "val_predictions.npz"
+
+    np.save(predictions_path, predictions)
+    np.save(labels_path, test_labels)
+    np.savez(
+        val_predictions_path,
+        predictions=predictions,
+        true_directions=test_labels,
+        angular_errors=angular_errors
+    )
+
     print("Test done.")
+
+    artifacts = {
+        "predictions": os.path.basename(predictions_path),
+        "labels": os.path.basename(labels_path),
+        "val_predictions": os.path.basename(val_predictions_path),
+        "architecture": "architecture.png"
+    }
+
+    return {
+        "metrics": metrics,
+        "artifacts": artifacts
+    }
 
 def log_metrics(test_labels, predictions, output_folder):
     save_labels_in_a_map(test_labels, output_folder, name="map_true")

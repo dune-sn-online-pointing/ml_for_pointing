@@ -11,11 +11,17 @@ from tensorflow.keras import layers
 from mpl_toolkits.axes_grid1 import ImageGrid
 from sklearn.metrics import roc_curve, auc
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
-from sklearn.preprocessing import label_binarize
 # import healpy as healpy  # Optional
 
 import general_purpose_libs as gpl
 import data_loader as dl
+
+
+def _to_numpy(array):
+    """Convert tensors/arrays to NumPy arrays without copying when possible."""
+    if array is None:
+        return None
+    return array.numpy() if hasattr(array, "numpy") else array
 
 
 def prepare_data_from_npz(data_dir, plane, dataset_parameters, output_folder):
@@ -86,12 +92,13 @@ def prepare_data_from_npz(data_dir, plane, dataset_parameters, output_folder):
             method=balance_method
         )
     
-    # Shuffle the dataset
+    # Shuffle the dataset (including metadata)
     print("\nShuffling the dataset...")
     index = np.arange(dataset_img.shape[0])
     np.random.shuffle(index)
     dataset_img = dataset_img[index]
     dataset_label = dataset_label[index]
+    metadata = metadata[index]
     print("Dataset shuffled.")
     
     # Save some sample images
@@ -116,6 +123,10 @@ def prepare_data_from_npz(data_dir, plane, dataset_parameters, output_folder):
     validation_labels = dataset_label[n_train:n_train+n_val]
     test_labels = dataset_label[n_train+n_val:]
     
+    train_metadata = metadata[:n_train]
+    validation_metadata = metadata[n_train:n_train+n_val]
+    test_metadata = metadata[n_train+n_val:]
+    
     print(f"Training set: {train_images.shape[0]} samples")
     print(f"Validation set: {validation_images.shape[0]} samples")
     print(f"Test set: {test_images.shape[0]} samples")
@@ -131,11 +142,12 @@ def prepare_data_from_npz(data_dir, plane, dataset_parameters, output_folder):
         )
         print(f"Train images shape after: {train_images.shape}")
         print("Data augmentation completed.")
+        # Note: metadata is not augmented, train_metadata remains original size
     
-    # Prepare return tuples
+    # Prepare return tuples with metadata
     train = (train_images, train_labels)
     validation = (validation_images, validation_labels)
-    test = (test_images, test_labels)
+    test = (test_images, test_labels, test_metadata)
     
     print("="*60)
     print("DATA PREPARATION COMPLETE")
@@ -273,6 +285,21 @@ def calculate_metrics(y_true, y_pred,):
     
 def log_metrics(y_true, y_pred, output_folder="", label_names=["CC", "ES"]):
     cm, accuracy, precision, recall, f1 = calculate_metrics(y_true, y_pred)
+    metrics = {
+        "accuracy": float(accuracy),
+        "precision": float(precision),
+        "recall": float(recall),
+        "f1_score": float(f1),
+        "confusion_matrix": cm.tolist()
+    }
+
+    try:
+        fpr, tpr, _ = roc_curve(y_true[:], y_pred[:])
+        roc_auc = auc(fpr, tpr)
+    except ValueError:
+        fpr, tpr, roc_auc = None, None, None
+    metrics["auc_roc"] = float(roc_auc) if roc_auc is not None else None
+
     print("Confusion Matrix")
     print(cm)
     print("Accuracy: ", accuracy)
@@ -288,6 +315,7 @@ def log_metrics(y_true, y_pred, output_folder="", label_names=["CC", "ES"]):
         f.write("Precision: "+str(precision)+"\n")
         f.write("Recall: "+str(recall)+"\n")
         f.write("F1: "+str(f1)+"\n")
+        f.write("AUC-ROC: "+(f"{roc_auc:.4f}" if roc_auc is not None else "N/A")+"\n")
     # save confusion matrix 
     plt.figure(figsize=(10,10))
     plt.title("Confusion matrix", fontsize=28)
@@ -298,21 +326,18 @@ def log_metrics(y_true, y_pred, output_folder="", label_names=["CC", "ES"]):
     plt.xlabel('Predicted label', fontsize=28)
     plt.savefig(output_folder+f"confusion_matrix.png")
     plt.clf()
-    # Binarize the output
-    y_test = label_binarize(y_true, classes=np.arange(len(label_names)))
-    n_classes = y_test.shape[1]
-    
     plt.figure()
-
-    fpr, tpr, _ = roc_curve(y_true[:], y_pred[:])
-    roc_auc = auc(fpr, tpr)
-    plt.plot(fpr, tpr, lw=2, label='ROC curve (area = {0:0.2f})'.format(roc_auc))
-
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    if fpr is not None and tpr is not None:
+        plt.plot(fpr, tpr, lw=2, label='ROC curve (area = {0:0.2f})'.format(roc_auc))
+        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    else:
+        plt.text(0.5, 0.5, 'ROC undefined (single class in labels)',
+                 ha='center', va='center', transform=plt.gca().transAxes)
     plt.xlabel('False Positive Rate', fontsize=28)
     plt.ylabel('True Positive Rate', fontsize=28)
     plt.title('ROC curve', fontsize=28)
-    plt.legend(loc="lower right", fontsize=20)
+    if fpr is not None and tpr is not None:
+        plt.legend(loc="lower right", fontsize=20)
     plt.savefig(output_folder+"roc_curve.png")
     plt.clf()
     # create an histogram of the predictions
@@ -343,11 +368,7 @@ def log_metrics(y_true, y_pred, output_folder="", label_names=["CC", "ES"]):
     plt.yscale('log')
     plt.savefig(output_folder+f"predictions_log.png")
     plt.clf()
-    
-    # Save predictions and labels for later plot regeneration
-    np.save(output_folder + "predictions.npy", y_pred)
-    np.save(output_folder + "test_labels.npy", y_true)
-    print(f"Saved predictions and labels to {output_folder}")
+    return metrics
 
 def save_sample_img(ds_item, output_folder, img_name):
     if ds_item.shape[2] == 1:
@@ -437,27 +458,89 @@ def save_samples_from_ds(dataset, labels, output_folder, name="img", n_samples_p
 
 def test_model(model, test, output_folder, label_names=["CC", "ES"]):
     print("Doing some test...")
-    predictions = model.predict(test)      
+
+    output_folder = output_folder if output_folder.endswith(os.sep) else output_folder + os.sep
+
+    def _extract_arrays(dataset):
+        if isinstance(dataset, tuple):
+            if len(dataset) == 3:
+                return _to_numpy(dataset[0]), _to_numpy(dataset[1]), _to_numpy(dataset[2])
+            if len(dataset) == 2:
+                return _to_numpy(dataset[0]), _to_numpy(dataset[1]), None
+            raise ValueError("Unexpected dataset tuple length for test set")
+        images_list, labels_list, metadata_list = [], [], []
+        for batch in dataset:
+            if isinstance(batch, (list, tuple)):
+                batch_images = batch[0]
+                batch_labels = batch[1] if len(batch) > 1 else None
+                batch_metadata = batch[2] if len(batch) > 2 else None
+            else:
+                batch_images = batch
+                batch_labels = None
+                batch_metadata = None
+            images_list.append(_to_numpy(batch_images))
+            if batch_labels is not None:
+                labels_list.append(_to_numpy(batch_labels))
+            if batch_metadata is not None:
+                metadata_list.append(_to_numpy(batch_metadata))
+        images = np.concatenate(images_list, axis=0)
+        labels = np.concatenate(labels_list, axis=0) if labels_list else None
+        metadata = np.concatenate(metadata_list, axis=0) if metadata_list else None
+        return images, labels, metadata
+
+    test_img, test_labels, test_metadata = _extract_arrays(test)
+    if test_labels is None:
+        raise ValueError("Test labels are required for evaluation")
+
+    predictions = model.predict(test_img)
     # Calculate metrics
     print("Calculating metrics...")
-    # get the test labels from the test dataset
-    test_labels = test[1]
-    log_metrics(test_labels, predictions, output_folder=output_folder, label_names=label_names)
+    metrics = log_metrics(test_labels, predictions, output_folder=output_folder, label_names=label_names)
     print("Metrics calculated.")
     print("Drawing model...")
     keras.utils.plot_model(model, output_folder+"architecture.png", show_shapes=True)
     print("Model drawn.")
     print("Drawing histogram of energies...")
-    test_img = test[0]
-    
-    # Extract metadata if available (test tuple has 3 elements: img, labels, metadata)
-    test_metadata = test[2] if len(test) > 2 else None
     
     histogram_of_enegies(test_labels, predictions, test_img, limit=0.5, output_folder=output_folder)
     print("Drawing prediction vs energy scatter plot...")
     plot_prediction_vs_energy(test_labels, predictions, test_img, metadata=test_metadata, output_folder=output_folder)
 
+    predictions_array = predictions.reshape(predictions.shape[0], -1)
+    if predictions_array.shape[1] == 1:
+        predictions_array = predictions_array[:, 0]
+    labels_array = np.reshape(test_labels, (test_labels.shape[0],))
+
+    predictions_path = output_folder + "predictions.npy"
+    labels_path = output_folder + "test_labels.npy"
+    npz_path = output_folder + "test_predictions.npz"
+
+    np.save(predictions_path, predictions_array)
+    np.save(labels_path, labels_array)
+
+    npz_payload = {
+        "predictions": predictions_array,
+        "labels": labels_array
+    }
+    if test_metadata is not None:
+        npz_payload["metadata"] = test_metadata
+    np.savez(npz_path, **npz_payload)
+    print(f"Saved predictions and labels to {output_folder}")
+
     print("Test done.")
+
+    artifacts = {
+        "predictions": os.path.basename(predictions_path),
+        "labels": os.path.basename(labels_path),
+        "test_predictions": os.path.basename(npz_path),
+        "confusion_matrix": "confusion_matrix.png",
+        "roc_curve": "roc_curve.png"
+    }
+
+    return {
+        "metrics": metrics,
+        "artifacts": artifacts
+    }
 
 def histogram_of_enegies(test_labels, predictions, images, limit=0.5, output_folder=""):
     # check if some images are corrupted

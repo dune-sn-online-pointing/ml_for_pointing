@@ -587,7 +587,9 @@ def generate_cosine_energy_pdf(predictions, results_dir, energy_bins=None):
     n_energy_bins = len(energy_bins)
     pdf_2d = np.zeros((n_energy_bins, n_cosine_bins))
     
-    # Fill PDF for each energy bin using raw histograms (NO SMOOTHING)
+    # Fill PDF for each energy bin with KDE smoothing
+    from scipy.stats import gaussian_kde
+    
     for i, (e_min, e_max) in enumerate(energy_bins):
         # Select events in this energy bin
         energy_mask = (energies_valid >= e_min) & (energies_valid < e_max)
@@ -595,22 +597,42 @@ def generate_cosine_energy_pdf(predictions, results_dir, energy_bins=None):
         n_events = len(cosine_in_bin)
         
         if n_events > 0:
-            # Use raw histogram (no KDE smoothing)
-            counts, _ = np.histogram(cosine_in_bin, bins=cosine_bin_edges)
-            bin_width = cosine_bin_edges[1] - cosine_bin_edges[0]
-            pdf_2d[i, :] = counts / (counts.sum() * bin_width)
+            if n_events >= 100:
+                # Use KDE smoothing for better PDF estimation
+                # Bandwidth selection: Scott's rule with adjustment for low stats
+                bw_factor = 'scott' if n_events >= 500 else 0.8 * (n_events / 500) ** 0.2
+                try:
+                    kde = gaussian_kde(cosine_in_bin, bw_method=bw_factor)
+                    pdf_2d[i, :] = kde(cosine_bin_centers)
+                    
+                    # Ensure PDF is normalized (numerical integration)
+                    bin_width = cosine_bin_edges[1] - cosine_bin_edges[0]
+                    integral = np.sum(pdf_2d[i, :]) * bin_width
+                    if integral > 0:
+                        pdf_2d[i, :] /= integral
+                except:
+                    # Fallback to histogram if KDE fails
+                    counts, _ = np.histogram(cosine_in_bin, bins=cosine_bin_edges)
+                    bin_width = cosine_bin_edges[1] - cosine_bin_edges[0]
+                    pdf_2d[i, :] = counts / (counts.sum() * bin_width)
+            else:
+                # For very low statistics (<100), use histogram
+                counts, _ = np.histogram(cosine_in_bin, bins=cosine_bin_edges)
+                bin_width = cosine_bin_edges[1] - cosine_bin_edges[0]
+                pdf_2d[i, :] = counts / (counts.sum() * bin_width)
+                print(f"⚠️  Low statistics in bin [{e_min}, {e_max}] MeV: {n_events} events (using histogram)")
         else:
             print(f"Warning: No events in energy bin [{e_min}, {e_max}] MeV")
     
     # Prepare output data
     pdf_data = {
-        'pdf_2d': pdf_2d,  # Shape: (n_energy_bins, n_cosine_bins) - raw histogram, NO smoothing
+        'pdf_2d': pdf_2d,  # Shape: (n_energy_bins, n_cosine_bins) - smoothed with KDE
         'cosine_bin_edges': cosine_bin_edges,
         'cosine_bin_centers': cosine_bin_centers,
         'energy_bins': energy_bins,
         'n_events_per_bin': [np.sum((energies_valid >= e[0]) & (energies_valid < e[1])) 
                              for e in energy_bins],
-        'smoothing_method': 'Raw histogram (no smoothing)'
+        'smoothing_method': 'KDE (Gaussian kernel) for N>=100, histogram for N<100'
     }
     
     # Save to file

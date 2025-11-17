@@ -36,7 +36,7 @@ echo "==========================================="
 
 # Run training
 cd /afs/cern.ch/work/e/evilla/private/dune/refactor_ml
-python electron_direction/models/train_three_plane.py --json "$JSON_FILE"
+python electron_direction/models/ed_training.py --input_json "$JSON_FILE"
 
 EXIT_CODE=$?
 

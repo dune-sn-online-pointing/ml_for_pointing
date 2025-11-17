@@ -231,7 +231,6 @@ def main():
     batch_size = training_config.get('batch_size', 64)
     learning_rate = training_config.get('learning_rate', 0.001)
     decay_rate = training_config.get('decay_rate', 0.95)
-    test_samples_per_class = training_config.get('test_samples_per_class', 500)  # Test set size per class
     
     base_dir = Path(output_config.get('base_dir', '.'))
     version = output_config.get('version', 'v1')
@@ -284,7 +283,7 @@ def main():
     
     # Incremental training
     num_batches = max_samples // (batch_size * 2)  # Each batch has batch_size per class
-    epochs_per_batch = training_config.get('epochs_per_batch', 5)  # Fixed epochs per batch for incremental training
+    epochs_per_batch = epochs // num_batches
     train_batch_size = 32  # Internal training batch size
     
     print(f"\nIncremental Training Setup:")
@@ -352,7 +351,7 @@ def main():
     print("=" * 80)
     
     # Load test set
-    test_size = test_samples_per_class  # Configurable test set size
+    test_size = batch_size  # Same size per class as training batches
     test_images, test_labels, test_metadata = load_test_set(all_files, test_size)
     
     # Normalize

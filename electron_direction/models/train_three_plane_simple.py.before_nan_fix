@@ -163,7 +163,7 @@ def main():
     
     # Recompile with the correct loss
     model.compile(
-        optimizer=keras.optimizers.Adam(learning_rate, clipnorm=0.5),
+        optimizer=keras.optimizers.Adam(learning_rate),
         loss=loss_fn,
         metrics=['mae']
     )

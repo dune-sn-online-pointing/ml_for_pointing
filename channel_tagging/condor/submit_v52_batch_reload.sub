@@ -7,7 +7,7 @@ error = /afs/cern.ch/work/e/evilla/private/dune/refactor_ml/channel_tagging/logs
 log = /afs/cern.ch/work/e/evilla/private/dune/refactor_ml/channel_tagging/logs/CT_v52_batch_reload_$(ClusterId).log
 
 request_cpus = 4
-request_memory = 64GB
+request_memory = 150GB
 request_disk = 20GB
 request_gpus = 1
 

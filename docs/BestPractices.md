@@ -7,3 +7,5 @@ Remember:
 - always use progressive version numbers for  models to avoid confusion.
 - update Networks.md with info about new models, no need to add if it's running or what.
 - source in the current shell source scripts/init.sh to load python env
+- don't put machine OS requirement in submit scripts
+- when starting from a working configuration or settings file, make a copy and moidyf the copy instead of starting from scratch, it's safer.

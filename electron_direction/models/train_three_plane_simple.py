@@ -41,9 +41,12 @@ def main():
     output_config = config['output']
     
     # Data directory
-    data_dir = data_config['data_directories'][0]
-    max_samples = data_config.get('max_samples', None)
+    # Data directories (support multiple)
+    data_directories = data_config['data_directories']
+    if isinstance(data_directories, str):
+        data_directories = [data_directories]
     train_split = data_config.get('train_split', 0.8)
+    max_samples = data_config.get('max_samples', None)
     shuffle = data_config.get('shuffle', True)
     
     # Model parameters
@@ -68,17 +71,36 @@ def main():
     print("=" * 70)
     print("STEP 1: LOADING DATA")
     print("=" * 70)
-    print(f"Data directory: {data_dir}")
-    print(f"Max samples: {max_samples}")
+    print(f"Data directories: {len(data_directories)} directories")
+    for idx, d in enumerate(data_directories, 1):
+        print(f"  [{idx}] {d}")
     print()
     
-    # Load 3-plane matched data
-    images_u, images_v, images_x, metadata = data_loader.load_three_plane_matched(
-        data_dir=data_dir,
-        max_samples=max_samples,
-        shuffle=shuffle,
-        verbose=True
-    )
+    # Load 3-plane matched data from all directories
+    all_images_u, all_images_v, all_images_x, all_metadata = [], [], [], []
+    samples_per_dir = max_samples // len(data_directories) if max_samples else None
+    
+    for dir_idx, data_dir in enumerate(data_directories):
+        print(f"\nLoading from directory {dir_idx+1}/{len(data_directories)}...")
+        images_u, images_v, images_x, metadata = data_loader.load_three_plane_matched(
+            data_dir=data_dir,
+            max_samples=samples_per_dir,
+            shuffle=shuffle,
+            verbose=True
+        )
+        all_images_u.append(images_u)
+        all_images_v.append(images_v)
+        all_images_x.append(images_x)
+        all_metadata.append(metadata)
+    
+    # Concatenate all data
+    import numpy as np
+    images_u = np.concatenate(all_images_u, axis=0)
+    images_v = np.concatenate(all_images_v, axis=0)
+    images_x = np.concatenate(all_images_x, axis=0)
+    metadata = np.concatenate(all_metadata, axis=0)
+    print(f"\nTotal loaded: {len(images_u)} samples from {len(data_directories)} directories")
+    
     
     # Extract direction labels from metadata
     directions = data_loader.extract_direction_labels(metadata)

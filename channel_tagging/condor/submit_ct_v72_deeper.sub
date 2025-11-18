@@ -1,0 +1,13 @@
+executable = run_ct_v72_deeper.sh
+output = logs/ct_v72_deeper.out
+error = logs/ct_v72_deeper.err
+log = logs/ct_v72_deeper.log
+
+request_cpus = 1
+request_gpus = 1
+request_memory = 32GB
+request_disk = 15GB
+
++JobFlavour = "nextweek"
+
+queue 1

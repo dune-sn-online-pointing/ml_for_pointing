@@ -415,6 +415,15 @@ def evaluate_model(model, test_images, test_labels, output_folder):
         plt.savefig(os.path.join(output_folder, 'confusion_matrix.png'), dpi=150)
         plt.close()
         print(f"✓ Saved confusion matrix to {output_folder}/confusion_matrix.png")
+        
+        # Save predictions for comprehensive analysis
+        pred_file = os.path.join(output_folder, 'test_predictions.npz')
+        np.savez(pred_file,
+                 predictions=predictions,
+                 true_labels=test_labels,
+                 test_images=test_images,
+                 energies=None)  # No energy data available in this training
+        print(f"✓ Saved predictions to {pred_file}")
     
     return {
         'test_loss': float(loss),

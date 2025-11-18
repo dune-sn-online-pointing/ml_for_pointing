@@ -1,0 +1,13 @@
+executable = run_ct_v71_deep.sh
+output = logs/ct_v71_deep.out
+error = logs/ct_v71_deep.err
+log = logs/ct_v71_deep.log
+
+request_cpus = 4
+request_gpus = 1
+request_memory = 60GB
+request_disk = 10GB
+
++JobFlavour = "nextweek"
+
+queue 1

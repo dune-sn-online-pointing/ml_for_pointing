@@ -1,0 +1,9 @@
+012 (9076272.000.000) 11/18 16:17:48 Job was held.
+	Error from slot1_1@b9pgpun018.cern.ch: Job has gone over cgroup memory limit of 18000 megabytes. Last measured usage: 15137 megabytes.  Consider resubmitting with a higher request_memory.
+	Code 34 Subcode 0
+...
+000 (9076381.000.000) 11/18 16:24:24 Job submitted from host: <188.185.8.79:9618?addrs=188.185.8.79-9618+[2001-1458-d00-63--100-23a]-9618&alias=bigbird26.cern.ch&noUDP&sock=schedd_3453776_a447>
+...
+009 (9076272.000.000) 11/18 16:24:34 Job was aborted.
+	via condor_rm (by user evilla)
+...

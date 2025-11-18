@@ -544,6 +544,17 @@ def main():
     print("\nClassification Report:")
     print(classification_report(test_labels, test_pred, target_names=['ES', 'CC']))
     
+    # Save predictions for comprehensive analysis
+    pred_file = os.path.join(output_folder, 'test_predictions.npz')
+    # For three-plane, save only X plane for visualization
+    test_images_x = test_images[2] if isinstance(test_images, (list, tuple)) else test_images
+    np.savez(pred_file,
+             predictions=test_pred_probs,
+             true_labels=test_labels,
+             test_images=test_images_x,
+             energies=None)  # No energy data available
+    print(f"✓ Saved predictions to {pred_file}")
+    
     # Save results
     results = {
         'test_loss': float(test_loss),

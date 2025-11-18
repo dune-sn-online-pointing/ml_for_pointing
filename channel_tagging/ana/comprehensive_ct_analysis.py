@@ -24,13 +24,8 @@ from pathlib import Path
 
 # Channel labels mapping
 CHANNEL_LABELS = {
-    0: 'νμ CC QE',
-    1: 'νμ CC MEC', 
-    2: 'νμ CC RES',
-    3: 'νμ CC DIS',
-    4: 'νμ CC Other',
-    5: 'νe CC',
-    6: 'NC'
+    0: 'ES',
+    1: 'CC'
 }
 
 def load_results(results_dir):
@@ -45,7 +40,7 @@ def load_results(results_dir):
         results = json.load(f)
     
     if pred_path.exists():
-        predictions = np.load(pred_path)
+        predictions = np.load(pred_path, allow_pickle=True)
     else:
         predictions = None
     
@@ -136,15 +131,15 @@ def plot_confusion_matrix(predictions, results, fig):
     cbar = ax1.figure.colorbar(im, ax=ax1)
     cbar.set_label('Recall (Fraction)', rotation=270, labelpad=20, fontsize=11, fontweight='bold')
     
-    # Add text annotations
+    # Add text annotations (percentages only)
     thresh = cm_norm.max() / 2.
     for i in range(n_classes):
         for j in range(n_classes):
             color = "white" if cm_norm[i, j] > thresh else "black"
-            # Show both count and percentage
-            text = f'{cm[i, j]}\n({cm_norm[i, j]:.2f})'
+            # Show percentage only
+            text = f'{cm_norm[i, j]:.1%}'
             ax1.text(j, i, text, ha="center", va="center",
-                    color=color, fontsize=8, fontweight='bold')
+                    color=color, fontsize=12, fontweight='bold')
     
     # Labels
     labels = [CHANNEL_LABELS.get(i, f'Class {i}') for i in range(n_classes)]
@@ -527,14 +522,19 @@ def plot_prediction_distribution(predictions, fig):
 
 def plot_energy_analysis(predictions, fig):
     """Page 6: Performance vs energy analysis."""
-    if 'energies' not in predictions or predictions['energies'] is None:
+    # Check if energies exist and are not None
+    try:
+        energies = predictions['energies']
+        # Check if it's actually None or an array containing None
+        if energies is None or (hasattr(energies, 'item') and energies.item() is None):
+            raise ValueError("No energy data")
+    except (KeyError, ValueError, TypeError):
         ax = fig.add_subplot(111)
         ax.text(0.5, 0.5, 'Energy data not available in predictions', 
                ha='center', va='center', fontsize=14)
         ax.axis('off')
         return
     
-    energies = predictions['energies']
     y_true = predictions['true_labels'].astype(int)
     y_pred = predictions['predictions'].argmax(axis=1)
     
@@ -611,13 +611,16 @@ def plot_energy_analysis(predictions, fig):
     ax3.grid(alpha=0.3, axis='y')
 
 
-def plot_example_predictions(predictions, fig):
-    """Page 7: Best and worst prediction examples per class."""
+def plot_example_predictions(predictions, fig, results_dir=None):
+    """Page 7: Best and worst prediction examples per class with volume images."""
     y_true = predictions['true_labels'].astype(int)
     y_prob = predictions['predictions']
     y_pred = y_prob.argmax(axis=1)
     
     n_classes = y_prob.shape[1]
+    
+    # Try to load test images if available
+    test_images = predictions.get('test_images', None)
     
     # Find best and worst for each class (limit to 4 examples to fit page)
     examples = []
@@ -649,19 +652,39 @@ def plot_example_predictions(predictions, fig):
         ax.axis('off')
         return
     
-    gs = gridspec.GridSpec(len(examples), 2, figure=fig, hspace=0.5, wspace=0.3)
+    # Layout: image on left, probability + details on right
+    gs = gridspec.GridSpec(len(examples), 3, figure=fig, hspace=0.5, wspace=0.3,
+                          width_ratios=[1.5, 1, 1])
     
     for row, (ex_type, true_class, idx, color) in enumerate(examples):
-        # Plot 1: Probability distribution for this sample
-        ax1 = fig.add_subplot(gs[row, 0])
-        
         probs = y_prob[idx]
         pred_class = y_pred[idx]
+        
+        # Plot 1: Volume image (if available)
+        ax_img = fig.add_subplot(gs[row, 0])
+        if test_images is not None and idx < len(test_images):
+            img = test_images[idx]
+            # Handle different image formats
+            if len(img.shape) == 3 and img.shape[-1] == 1:
+                img = img[:, :, 0]  # Remove channel dimension
+            ax_img.imshow(img, cmap='viridis', aspect='auto')
+            ax_img.set_title(f'{ex_type} - True: {CHANNEL_LABELS.get(true_class)}', 
+                           fontsize=11, fontweight='bold')
+            ax_img.axis('off')
+        else:
+            ax_img.text(0.5, 0.5, 'Image not\navailable', 
+                       ha='center', va='center', fontsize=10)
+            ax_img.set_title(f'{ex_type} - True: {CHANNEL_LABELS.get(true_class)}', 
+                           fontsize=11, fontweight='bold')
+            ax_img.axis('off')
+        
+        # Plot 2: Probability distribution
+        ax_prob = fig.add_subplot(gs[row, 1])
         
         x_pos = np.arange(n_classes)
         labels = [CHANNEL_LABELS.get(i, f'C{i}') for i in range(n_classes)]
         
-        bars = ax1.bar(x_pos, probs, alpha=0.7, edgecolor='black')
+        bars = ax_prob.bar(x_pos, probs, alpha=0.7, edgecolor='black')
         
         # Color the bars
         for i, bar in enumerate(bars):
@@ -674,40 +697,34 @@ def plot_example_predictions(predictions, fig):
             else:
                 bar.set_facecolor('lightgray')
         
-        ax1.set_ylabel('Probability', fontsize=10, fontweight='bold')
-        ax1.set_title(f'{ex_type} - True: {CHANNEL_LABELS.get(true_class)}', 
-                     fontsize=11, fontweight='bold')
-        ax1.set_xticks(x_pos)
-        ax1.set_xticklabels(labels, rotation=45, ha='right', fontsize=7)
-        ax1.set_ylim([0, 1])
-        ax1.grid(alpha=0.3, axis='y')
-        ax1.axhline(1/n_classes, color='black', linestyle=':', alpha=0.3)
+        ax_prob.set_ylabel('Probability', fontsize=10, fontweight='bold')
+        ax_prob.set_title('Prediction Confidence', fontsize=10, fontweight='bold')
+        ax_prob.set_xticks(x_pos)
+        ax_prob.set_xticklabels(labels, fontsize=9)
+        ax_prob.set_ylim([0, 1])
+        ax_prob.grid(alpha=0.3, axis='y')
+        ax_prob.axhline(0.5, color='black', linestyle=':', alpha=0.3)
         
-        # Plot 2: Details
-        ax2 = fig.add_subplot(gs[row, 1])
-        ax2.axis('off')
+        # Plot 3: Details
+        ax_info = fig.add_subplot(gs[row, 2])
+        ax_info.axis('off')
         
         true_label = CHANNEL_LABELS.get(true_class, f'C{true_class}')
         pred_label = CHANNEL_LABELS.get(pred_class, f'C{pred_class}')
         
         info_text = f"""True: {true_label}
 Predicted: {pred_label}
-Confidence: {probs[pred_class]:.4f}
 
-True class prob: {probs[true_class]:.4f}
-Correct: {'Yes' if pred_class == true_class else 'No'}
+ES prob: {probs[0]:.3f}
+CC prob: {probs[1]:.3f}
 
-Top 3 predictions:"""
+Confidence: {probs[pred_class]:.3f}
+
+Correct: {'✓ Yes' if pred_class == true_class else '✗ No'}"""
         
-        # Add top 3
-        top3_idx = np.argsort(probs)[-3:][::-1]
-        for i, idx_top in enumerate(top3_idx):
-            lbl = CHANNEL_LABELS.get(idx_top, f'C{idx_top}')
-            info_text += f"\n  {i+1}. {lbl}: {probs[idx_top]:.4f}"
-        
-        ax2.text(0.05, 0.95, info_text, transform=ax2.transAxes, fontsize=8,
-                verticalalignment='top', fontfamily='monospace',
-                bbox=dict(boxstyle='round', facecolor=color, alpha=0.3, pad=0.4))
+        ax_info.text(0.05, 0.95, info_text, transform=ax_info.transAxes, fontsize=9,
+                    verticalalignment='top', fontfamily='monospace',
+                    bbox=dict(boxstyle='round', facecolor=color, alpha=0.3, pad=0.5))
 
 
 def generate_comprehensive_analysis(results_dir, output_pdf=None):
@@ -747,7 +764,15 @@ def generate_comprehensive_analysis(results_dir, output_pdf=None):
         print("❌ No predictions found. Run training with save_predictions=True")
         return
     
-    model_name = results['config']['model'].get('name', 'ct_model')
+    # Handle different config structures
+    config = results.get('config', {})
+    if 'model' in config:
+        # New format: nested structure
+        model_name = config['model'].get('name', 'ct_model')
+    else:
+        # Old format: flat structure
+        model_name = config.get('model_name', 'ct_model')
+    
     print(f"✓ Model: {model_name}")
     print(f"✓ Predictions: {len(predictions['predictions']):,} samples")
     print(f"✓ Classes: {predictions['predictions'].shape[1]}")
@@ -818,8 +843,8 @@ def generate_comprehensive_analysis(results_dir, output_pdf=None):
         
         # Page 7: Example predictions
         print("📈 Generating page 7/7: Example Predictions...")
-        fig = plt.figure(figsize=(14, 14))
-        plot_example_predictions(predictions, fig)
+        fig = plt.figure(figsize=(16, 10))
+        plot_example_predictions(predictions, fig, results_dir)
         fig.suptitle(f'{model_name.upper()} - Example Predictions', 
                     fontsize=16, fontweight='bold', y=0.995)
         pdf.savefig(fig, bbox_inches='tight')

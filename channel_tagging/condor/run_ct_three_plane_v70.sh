@@ -21,8 +21,8 @@ echo ""
 echo "Starting training..."
 cd /afs/cern.ch/work/e/evilla/private/dune/refactor_ml/channel_tagging/models
 
-python3 train_ct_three_plane_v2.py \
-    --input_json /afs/cern.ch/work/e/evilla/private/dune/refactor_ml/channel_tagging/json/v70_three_plane_v2_10k.json
+python3 train_ct_three_plane_batch_reload.py \
+    --json /afs/cern.ch/work/e/evilla/private/dune/refactor_ml/channel_tagging/json/v70_three_plane_v2_10k.json
 
 exit_code=$?
 

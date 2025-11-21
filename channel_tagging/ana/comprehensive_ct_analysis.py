@@ -30,19 +30,76 @@ CHANNEL_LABELS = {
 
 def load_results(results_dir):
     """Load results.json and predictions."""
-    results_path = Path(results_dir) / 'results.json'
-    pred_path = Path(results_dir) / 'test_predictions.npz'
+    results_dir = Path(results_dir)
+    results_path = results_dir / 'results.json'
+    metrics_path = results_dir / 'v77_dario_batch_5k_metrics.json'
+    pred_path = results_dir / 'test_predictions.npz'
+    pred_path_alt = results_dir / 'v77_dario_batch_5k_predictions.npz'
+    pred_energy_path = results_dir / 'test_predictions_with_energy.npz'
+    history_path = results_dir / 'training_history.json'
     
-    if not results_path.exists():
-        raise FileNotFoundError(f"No results.json found in {results_dir}")
+    # Try different result file names
+    if results_path.exists():
+        results_file = results_path
+    elif metrics_path.exists():
+        results_file = metrics_path
+    else:
+        raise FileNotFoundError(f"No results.json or metrics.json found in {results_dir}")
     
-    with open(results_path, 'r') as f:
+    with open(results_file, 'r') as f:
         results = json.load(f)
     
-    if pred_path.exists():
+    # Load training history if available
+    if 'history' not in results:
+        if history_path.exists():
+            with open(history_path, 'r') as f:
+                results['history'] = json.load(f)
+        else:
+            # Try CSV format
+            csv_path = results_dir / f"{results_dir.name}_training_log.csv"
+            if not csv_path.exists():
+                # Try finding any training_log.csv
+                csv_files = list(results_dir.glob('*training_log.csv'))
+                if csv_files:
+                    csv_path = csv_files[0]
+            if csv_path.exists():
+                import csv as csv_module
+                history = {}
+                with open(csv_path, 'r') as f:
+                    reader = csv_module.DictReader(f)
+                    for row in reader:
+                        for key, value in row.items():
+                            if not key or key.strip().lower() in ['epoch', 'cycle']:
+                                continue
+                            key = key.strip()
+                            history.setdefault(key, [])
+                            try:
+                                history[key].append(float(value))
+                            except (TypeError, ValueError):
+                                history[key].append(np.nan)
+                if history:
+                    results['history'] = history
+    
+    # Try loading predictions with energy first, fall back to regular predictions
+    if pred_energy_path.exists():
+        predictions = np.load(pred_energy_path, allow_pickle=True)
+    elif pred_path.exists():
         predictions = np.load(pred_path, allow_pickle=True)
+    elif pred_path_alt.exists():
+        predictions = np.load(pred_path_alt, allow_pickle=True)
     else:
         predictions = None
+    
+    # Convert binary predictions to 2-class format if needed
+    if predictions is not None and 'predictions' in predictions:
+        preds = predictions['predictions']
+        if len(preds.shape) == 2 and preds.shape[1] == 1:
+            # Binary classification with single sigmoid output
+            # Convert to 2-class probabilities: [1-p, p]
+            preds_2class = np.hstack([1 - preds, preds])
+            # Create new dict with updated predictions
+            predictions = dict(predictions)
+            predictions['predictions'] = preds_2class
     
     return results, predictions
 
@@ -522,16 +579,15 @@ def plot_prediction_distribution(predictions, fig):
 
 def plot_energy_analysis(predictions, fig):
     """Page 6: Performance vs energy analysis."""
-    # Check if energies exist and are not None
+    # Check if energies exist in predictions
     try:
         energies = predictions['energies']
-        # Check if it's actually None or an array containing None
         if energies is None or (hasattr(energies, 'item') and energies.item() is None):
             raise ValueError("No energy data")
     except (KeyError, ValueError, TypeError):
         ax = fig.add_subplot(111)
-        ax.text(0.5, 0.5, 'Energy data not available in predictions', 
-               ha='center', va='center', fontsize=14)
+        ax.text(0.5, 0.5, 'Energy data not available\n\nRun: python extract_test_energies.py <results_dir>', 
+               ha='center', va='center', fontsize=12)
         ax.axis('off')
         return
     

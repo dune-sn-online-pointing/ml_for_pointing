@@ -214,8 +214,8 @@ def plot_energy_distributions(data, energy_cut_results, es_energies, cc_energies
     # 1. Overlapping histograms
     ax1 = plt.subplot(2, 3, 1)
     bins = np.linspace(0, max(np.max(es_energies), np.max(cc_energies)), 50)
-    ax1.hist(cc_energies, bins=bins, alpha=0.6, label='CC (Background)', color='red', edgecolor='black')
-    ax1.hist(es_energies, bins=bins, alpha=0.6, label='ES (Main Track)', color='blue', edgecolor='black')
+    ax1.hist(cc_energies, bins=bins, alpha=0.6, label='Background', color='red', edgecolor='black')
+    ax1.hist(es_energies, bins=bins, alpha=0.6, label='Main Tracks', color='blue', edgecolor='black')
     ax1.axvline(energy_cut_results['threshold'], color='green', linestyle='--', linewidth=2, 
                 label=f'Cut: {energy_cut_results["threshold"]:.1f} MeV')
     ax1.set_xlabel('Cluster Energy (MeV)', fontsize=12)
@@ -227,9 +227,9 @@ def plot_energy_distributions(data, energy_cut_results, es_energies, cc_energies
     # 2. Cumulative distributions
     ax2 = plt.subplot(2, 3, 2)
     ax2.hist(es_energies, bins=100, cumulative=True, density=True, alpha=0.7, 
-             label='ES (Main Track)', color='blue', histtype='step', linewidth=2)
+             label='Main Tracks', color='blue', histtype='step', linewidth=2)
     ax2.hist(cc_energies, bins=100, cumulative=True, density=True, alpha=0.7,
-             label='CC (Background)', color='red', histtype='step', linewidth=2)
+             label='Background', color='red', histtype='step', linewidth=2)
     ax2.axvline(energy_cut_results['threshold'], color='green', linestyle='--', linewidth=2)
     ax2.axhline(0.95, color='gray', linestyle=':', alpha=0.5, label='95% rejection target')
     ax2.set_xlabel('Cluster Energy (MeV)', fontsize=12)
@@ -240,8 +240,8 @@ def plot_energy_distributions(data, energy_cut_results, es_energies, cc_energies
     
     # 3. Log scale histogram
     ax3 = plt.subplot(2, 3, 3)
-    ax3.hist(cc_energies, bins=bins, alpha=0.6, label='CC (Background)', color='red', edgecolor='black')
-    ax3.hist(es_energies, bins=bins, alpha=0.6, label='ES (Main Track)', color='blue', edgecolor='black')
+    ax3.hist(cc_energies, bins=bins, alpha=0.6, label='Background', color='red', edgecolor='black')
+    ax3.hist(es_energies, bins=bins, alpha=0.6, label='Main Tracks', color='blue', edgecolor='black')
     ax3.axvline(energy_cut_results['threshold'], color='green', linestyle='--', linewidth=2)
     ax3.set_xlabel('Cluster Energy (MeV)', fontsize=12)
     ax3.set_ylabel('Count (log scale)', fontsize=12)
@@ -348,7 +348,7 @@ def plot_energy_distributions(data, energy_cut_results, es_energies, cc_energies
              bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3))
     
     plt.tight_layout()
-    output_path = OUTPUT_DIR / "energy_cut_vs_ml_analysis.png"
+    output_path = OUTPUT_DIR / "energy_cut_vs_ml_analysis_corrected_labels.png"
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     print(f"✓ Saved plot: {output_path}")
     plt.close()

@@ -8,8 +8,8 @@
     "input_shape": [208, 1242, 1]
   },
   "data": {
-    "es_data_dir": "/eos/home-e/evilla/dune/sn-tps/prod_es/es_production_volume_images_tick3_ch2_min2_tot3_e2p0",
-    "cc_data_dir": "/eos/home-e/evilla/dune/sn-tps/prod_cc/cc_production_volume_images_tick3_ch2_min2_tot3_e2p0",
+    "es_dir": "/eos/home-e/evilla/dune/sn-tps/prod_es/es_production_volume_images_tick3_ch2_min2_tot3_e2p0",
+    "cc_dir": "/eos/home-e/evilla/dune/sn-tps/prod_cc/cc_production_volume_images_tick3_ch2_min2_tot3_e2p0",
     "max_samples_per_class": 5000,
     "train_split": 0.7,
     "val_split": 0.15
@@ -19,7 +19,8 @@
     "epochs": 50,
     "learning_rate": 0.001,
     "early_stopping_patience": 15,
-    "reduce_lr_patience": 8
+    "reduce_lr_patience": 8,
+    "reload_every_n_epochs": 5
   },
   "output": {
     "base_dir": "/eos/user/e/evilla/dune/sn-tps/neural_networks/channel_tagging/"

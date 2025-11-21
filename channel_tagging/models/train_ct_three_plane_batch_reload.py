@@ -301,16 +301,26 @@ def train_with_batch_reload(model, initial_train, initial_val, test_data,
             )
         )
     
-    callbacks.append(
-        keras.callbacks.ReduceLROnPlateau(
-            monitor='val_loss',
-            factor=0.5,
-            patience=3,
-            verbose=1,
-            min_lr=1e-6
-        )
-    )
-    
+# DISABLED:     callbacks.append(
+# DISABLED:         keras.callbacks.ReduceLROnPlateau(
+# DISABLED:             monitor='val_loss',
+# DISABLED:             factor=0.5,
+# DISABLED:             patience=3,
+# DISABLED:             verbose=1,
+# DISABLED:             min_lr=1e-6
+# DISABLED:         )
+# DISABLED:     
+# DISABLED:     # Early stopping to prevent unnecessary training
+# DISABLED:     callbacks.append(
+# DISABLED:         keras.callbacks.EarlyStopping(
+# DISABLED:             monitor='val_loss',
+# DISABLED:             patience=5,
+# DISABLED:             restore_best_weights=True,
+# DISABLED:             verbose=1
+# DISABLED:         )
+# DISABLED:     )
+# DISABLED:     )
+# DISABLED:     
     # Initial data
     train_images, train_labels = initial_train
     val_images, val_labels = initial_val
@@ -565,7 +575,7 @@ def main():
         'config': config
     }
     
-    gpl.write_results_json(results, output_folder)
+    gpl.write_results_json(output_folder, results)
     
     print(f"\n{'='*70}")
     print(f"Training complete! Results saved to:")

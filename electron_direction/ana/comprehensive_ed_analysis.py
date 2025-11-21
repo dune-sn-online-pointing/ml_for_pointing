@@ -33,7 +33,7 @@ def load_results(results_dir):
         results = json.load(f)
     
     if pred_path.exists():
-        predictions = np.load(pred_path)
+        predictions = np.load(pred_path, allow_pickle=True)
         
         # Calculate cosine similarity if not present
         if 'cosine_similarity' not in predictions:
@@ -642,10 +642,19 @@ def visualize_cosine_energy_pdf(pdf_data, results_dir):
     # Create custom y-tick labels for energy bins
     energy_labels = [f"{e[0]}-{e[1]} MeV" for e in energy_bins]
     
-    im = ax1.imshow(pdf_2d, aspect='auto', cmap='hot', origin='lower',
-                   extent=[-1, 1, 0, len(energy_bins)])
+    # Use custom colormap with white for zero values
+    import matplotlib.colors as mcolors
+    cmap = plt.cm.hot.copy()
+    cmap.set_under('white')  # Set values below vmin to white
+    
+    # Set vmin to slightly above zero to make zero values white
+    vmin = pdf_2d[pdf_2d > 0].min() if np.any(pdf_2d > 0) else 1e-10
+    
+    im = ax1.imshow(pdf_2d, aspect='auto', cmap=cmap, origin='lower',
+                    extent=[-1, 1, 0, len(energy_bins)], vmin=vmin)
     
     ax1.set_xlabel('Cosine Similarity', fontsize=13, fontweight='bold')
+    ax1.set_ylabel('Energy Bin', fontsize=13, fontweight='bold')
     ax1.set_ylabel('Energy Bin', fontsize=13, fontweight='bold')
     ax1.set_title('2D PDF: P(cosine | energy)', fontsize=14, fontweight='bold')
     ax1.set_yticks(np.arange(len(energy_bins)) + 0.5)
